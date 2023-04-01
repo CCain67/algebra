@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "algebra"
+version = "0.0.1"
+authors = [
+  { name="Chase Cain", email="charlescain0607@gmail.com" },
+]
+description = "A library for computational abstract algebra"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "./src"
+]
