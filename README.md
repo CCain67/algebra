@@ -1,2 +1,1 @@
-# Computational Algebra
-
+# algebra - a small library for computational abstract algebra
