@@ -58,7 +58,7 @@ class Homomorphism(ABC):
             return self._image
         
     def get_kernel(self) -> Subgroup:
-        X = self.graph()
+        X = self.graph
         G_times_H = self.domain*self.codomain
         G_1 = Subgroup([p for p in G_times_H if p[1].is_identity()], G_times_H)
         return Subgroup([p[0] for p in (X & G_1)], self.domain)
