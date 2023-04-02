@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Callable, Tuple
 
 from group_theory.base.group_elements import GroupElement
@@ -8,7 +7,7 @@ from group_theory.base.groups import (
 )
 from group_theory.constructions.cartesian_products import CartesianProductElement
 
-class Homomorphism(ABC):
+class Homomorphism:
     def __init__(self, domain: Group, map: Callable[[Tuple[GroupElement,...]],GroupElement], codomain: Group) -> None:
         self.domain = domain
         self.map = map
@@ -72,9 +71,12 @@ class Homomorphism(ABC):
             return self._kernel
         
     def check_iso(self) -> bool:
-        if len(self.kernel)==1:
-            if self.domain.order==self.codomain.order:
-                return True
+        '''
+        this utilizes the fact that for two finite sets, if an injective map exists between them, and 
+        the two sets are of equal order, then the map is a bijection. 
+        '''
+        if len(self.kernel)==1 and self.domain.order==self.codomain.order and self.validate_homomorphism():
+            return True
         else:
             return False
 

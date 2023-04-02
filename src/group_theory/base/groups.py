@@ -1,11 +1,10 @@
-from abc import ABC
 from random import sample
 
 from group_theory.base.group_elements import (
     GroupElement,
 )
 
-class Group(ABC):
+class Group:
     def __init__(self, elements: list[GroupElement]):
         self.elements = elements
         self.order = len(self.elements)

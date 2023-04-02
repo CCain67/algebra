@@ -286,13 +286,6 @@ class Matrix(GroupElement):
     def __repr__(self):
         rep = self.matrix.__repr__()
         return rep
-    
-    #def __repr__(self):
-    #    rep = self.matrix._repr_latex_()
-    #    return rep
-    #def _repr_latex_(self):
-    #    string = self.__repr__()
-    #    return string
 
     def __eq__(self,other):
         return self.matrix==other.matrix
