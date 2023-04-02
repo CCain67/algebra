@@ -15,25 +15,13 @@ class Homomorphism(ABC):
         self.codomain = codomain
 
         # properties
+        self._graph = None
         self._image = None
         self._kernel = None
         self._is_iso = None
 
     def validate_homomorphism(self) -> bool:
-        self.domain.get_random_generators()
-        augmented_generators = self.domain.generators+[a*b for a in self.domain.generators for b in self.domain.generators]
-        G_times_H = self.domain*self.codomain
-        element_image_pairs = [CartesianProductElement((x,self.map(x))) for x in augmented_generators]
-        X = G_times_H.subgroup_generated_by(element_image_pairs)
-        return X.order==self.domain.order
-    
-    def graph(self) -> Subgroup:
-        self.domain.get_random_generators()
-        augmented_generators = self.domain.generators+[a*b for a in self.domain.generators for b in self.domain.generators]
-        G_times_H = self.domain*self.codomain
-        element_image_pairs = [CartesianProductElement((x,self.map(x))) for x in augmented_generators]
-        X = G_times_H.subgroup_generated_by(element_image_pairs)
-        return X
+        return self.graph.order==self.domain.order
     
     @classmethod
     def from_dict(cls, domain: Group, in_out_dict: dict, codomain: Group):
@@ -41,7 +29,23 @@ class Homomorphism(ABC):
             return in_out_dict[g]
         
         return cls(domain, f, codomain)
+    
+    def get_graph(self) -> Subgroup:
+        self.domain.get_random_generators()
+        augmented_generators = self.domain.generators+[a*b for a in self.domain.generators for b in self.domain.generators]
+        G_times_H = self.domain*self.codomain
+        element_image_pairs = [CartesianProductElement((x,self.map(x))) for x in augmented_generators]
+        X = G_times_H.subgroup_generated_by(element_image_pairs)
+        return X
 
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = self.get_graph()
+            return self._graph
+        else:
+            return self._graph
+    
     def get_image(self) -> Group:
         return NotImplemented
 
