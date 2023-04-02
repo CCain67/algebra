@@ -28,11 +28,6 @@ class Permutation(GroupElement):
         self.cycle_notation = self.get_cycle_notation()
         return self.cycle_notation
     
-    #def _repr_latex_(self):
-    #    string = self.__repr__()
-    #    string = '$' + string + '$'
-    #    return string
-    
     def __eq__(self,other):
         return self.permutation==other.permutation
     
@@ -119,7 +114,7 @@ class Permutation(GroupElement):
 
     @property
     def order(self):
-        if self._order == None:
+        if self._order is None:
             self._order = self.get_order()
             return self._order
         else:
@@ -127,7 +122,7 @@ class Permutation(GroupElement):
         
     @property
     def sign(self):
-        if self._sign == None:
+        if self._sign is None:
             self._sign = numpy.linalg.det(self.to_matrix().matrix)
             return self._sign
         else:

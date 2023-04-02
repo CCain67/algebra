@@ -217,7 +217,7 @@ class Subgroup(Group):
 
     @property
     def is_normal(self):
-        if self._is_normal == None:
+        if self._is_normal is None:
             self._is_normal = self.check_normality()
             return self._is_normal
         else:

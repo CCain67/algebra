@@ -43,11 +43,11 @@ class Homomorphism(ABC):
         return cls(domain, f, codomain)
 
     def get_image(self) -> Group:
-        return
+        return NotImplemented
 
     @property
     def image(self):
-        if self._image == None:
+        if self._image is None:
             self._image = self.get_image()
             return self._image
         else:
@@ -61,7 +61,7 @@ class Homomorphism(ABC):
 
     @property
     def kernel(self):
-        if self._kernel == None:
+        if self._kernel is None:
             self._kernel = self.get_kernel()
             return self._kernel
         else:
@@ -76,7 +76,7 @@ class Homomorphism(ABC):
 
     @property
     def is_iso(self):
-        if self._is_iso == None:
+        if self._is_iso is None:
             self._is_iso = self.check_iso()
             return self._is_iso
         else:
