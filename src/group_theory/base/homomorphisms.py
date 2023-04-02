@@ -1,11 +1,13 @@
 from typing import Callable, Tuple
 
-from group_theory.base.group_elements import GroupElement
+from group_theory.base.group_elements import (
+    CartesianProductElement,
+    GroupElement,
+)
 from group_theory.base.groups import (
     Group,
     Subgroup,
 )
-from group_theory.constructions.cartesian_products import CartesianProductElement
 
 class Homomorphism:
     def __init__(self, domain: Group, map: Callable[[Tuple[GroupElement,...]],GroupElement], codomain: Group) -> None:

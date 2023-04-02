@@ -1,6 +1,8 @@
 from random import sample
+from itertools import product
 
 from group_theory.base.group_elements import (
+    CartesianProductElement,
     GroupElement,
 )
 
@@ -20,14 +22,10 @@ class Group:
     def __repr__(self):
         s = self.elements.__repr__()
         return s
-    
-    #def _repr_latex_(self):
-    #    string = self.__repr__()
-    #    return string
 
     def __mul__(self,other):
-        from group_theory.constructions.cartesian_products import CartesianProduct
-        return CartesianProduct(self,other)
+        product_elements = list(CartesianProductElement(g) for g in product(self.elements,other.elements))
+        return Group(product_elements)
 
     def __truediv__(self,other):
         if isinstance(other, Subgroup):
