@@ -312,10 +312,6 @@ class Matrix(GroupElement):
     
     def is_identity(self):
         return self.matrix==sympy.eye(self.dimension)
-    
-
-
-
 
 class CartesianProductElement(GroupElement):
     def __init__(self, elements: tuple[GroupElement]) -> None:

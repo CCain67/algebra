@@ -24,14 +24,18 @@ class Group:
         return s
 
     def __mul__(self,other):
+        '''
+        this is the standard cartesian product of groups: for group G and H, G*H contains all
+        pairs of elements of the form (g,h)
+        '''
         product_elements = list(CartesianProductElement(g) for g in product(self.elements,other.elements))
         return Group(product_elements)
 
     def __truediv__(self,other):
         if isinstance(other, Subgroup):
             if other.parent_group==self:
-                from group_theory.constructions.quotient_groups import QuotientGroup
-                return QuotientGroup(self,other)
+                cosets = {Coset(g, other) for g in self}
+                return Group(list(cosets))
             else:
                 raise ValueError('the subgroup provided is not a subgroup of the provided parent group')
         else:
@@ -139,19 +143,15 @@ class Group:
 
 class Subgroup(Group):
     def __init__(self, elements: list[GroupElement], parent_group: Group):
-        super().__init__( self.validate_inclusion(elements, parent_group.elements) )
+        super().__init__(elements)
         self.parent_group = parent_group
         self.canonical_generators = None
 
         # properties
         self._is_normal = None
 
-    @staticmethod
-    def validate_inclusion(element_list: list, element_superlist: list):
-        element_superset = set(element_superlist)
-        element_set = set(element_list)
-        assert element_set.issubset(element_superset)
-        return element_list
+    def validate_inclusion(self):
+        return set(self.elements).issubset(self.parent_group.elements)
     
     # IMPORTANT - until this is called and returns true, 
     # the Subgroup instance may not actually be a subgroup
@@ -219,3 +219,52 @@ class Subgroup(Group):
             return self._is_normal
         else:
             return self._is_normal
+
+class Coset(GroupElement):
+    '''
+    this class is used to represent elements gH of quotient groups G/H 
+    for elements g and normal subgroups H
+    '''
+    def __init__(self, g: GroupElement, subgroup: Subgroup) -> None:
+        self.g, self.subgroup = self.validate_coset(g, subgroup)
+        self.elements = [self.g*x for x in self.subgroup]
+
+    def __repr__(self):
+        return str(self.g)+'H'
+    
+    def __eq__(self, other):
+        return set(self.elements)==set(other.elements)
+    
+    def __ne__(self, other):
+        return set(self.elements)!=set(other.elements)
+    
+    def __hash__(self):
+        return hash(frozenset(self.elements))
+    
+    def __getitem__(self, key): 
+        return self.elements[key]
+    
+    def __iter__(self): 
+        return iter(self.elements)
+    
+    def __len__(self):
+        return len(self.elements)
+    
+    def __mul__(self,other):
+        if self.subgroup!=other.subgroup:
+            raise ValueError('the subgroups of each coset must match')
+        return Coset(self.g*other.g, self.subgroup)
+    
+    def __invert__(self):
+        return Coset(~self.g, self.subgroup)
+
+    @staticmethod
+    def validate_coset(g: GroupElement, subgroup: Subgroup):
+        assert g in subgroup.parent_group, "the group element must lie in the parent group"
+        return g, subgroup
+
+    def get_order(self):
+        return NotImplemented
+    
+    def is_identity(self):
+        return self.g in self.subgroup
