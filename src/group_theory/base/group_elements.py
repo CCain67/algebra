@@ -32,7 +32,7 @@ class Permutation(GroupElement):
         return self.permutation==other.permutation
     
     def __ne__(self,other):
-        return ~self.__eq__(self,other)
+        return not self.permutation==other.permutation
     
     def __hash__(self):
         return hash(frozenset(self.permutation.items()))
@@ -170,7 +170,7 @@ class ResidueClass(GroupElement):
         return (self.residue==other.residue) and (self.modulus==other.modulus)
     
     def __ne__(self,other):
-        return ~self.__eq__(self,other)
+        return not (self.residue==other.residue) or not (self.modulus==other.modulus)
 
     def __add__(self,other):
         if self.modulus!=other.modulus:
@@ -290,6 +290,9 @@ class Matrix(GroupElement):
     def __eq__(self,other):
         return self.matrix==other.matrix
     
+    def __ne__(self,other):
+        return not self.matrix==other.matrix
+    
     def __hash__(self) -> int:
         return hash((tuple(self.matrix),self.characteristic))
     
@@ -326,6 +329,9 @@ class CartesianProductElement(GroupElement):
     
     def __eq__(self,other):
         return self.elements==other.elements
+    
+    def __ne__(self,other):
+        return not self.elements==other.elements
 
     def __mul__(self, other):
         if len(self.elements)!=len(other.elements):
