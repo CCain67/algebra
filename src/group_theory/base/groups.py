@@ -73,6 +73,12 @@ class Group:
     def __len__(self):
         return len(self.elements)
     
+    def is_trivial(self):
+        if len(self.elements)==1 and self.elements[0].is_identity():
+            return True
+        else:
+            return False
+    
     def get_random_generators(self) -> list[GroupElement]:
         generators = []
         elements = [g for g in self if not g.is_identity()]
@@ -98,11 +104,7 @@ class Group:
         else:
             return self._generators
     
-    def is_trivial(self):
-        if len(self.elements)==1 and self.elements[0].is_identity():
-            return True
-        else:
-            return False
+    
         
     def center(self):
         Z = [self.identity]
@@ -144,6 +146,9 @@ class Group:
             return self.subgroup_generated_by([g*x*y*(~x)*(~y)*(~g) for x in self.generators for y in self.generators for g in self.elements])
         else:
             return self.subgroup_generated_by([x*y*(~x)*(~y) for x in self.elements for y in self.elements])
+        
+    def is_abelian(self):
+        return self.commutator_subgroup().is_trivial()
     
     def derived_series(self):
         last_subgroup = Subgroup(self.elements, self)
