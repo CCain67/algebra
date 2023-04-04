@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from random import sample
 from itertools import product
 
@@ -106,18 +108,36 @@ class Group:
             return self._generators
         
     def center(self):
+        '''
+        the centralizer of the entire group is the center
+        '''
+        G = Subgroup(self.elements,self)
+        return self.centralizer(G)
+    
+    def centralizer(self, H: Subgroup):
+        if self!=H.parent_group:
+            raise ValueError('subgroup provided is not a subgroup of this group')
         Z = [self.identity]
-        number_of_generators = len(self.generators)
+        number_of_generators = len(H.generators)
         for z in [x for x in self if x!=self.identity]:
             counter = 0 
-            for g in self.generators:
-                if z*g==g*z:
+            for h in H.generators:
+                if z*h==h*z:
                     counter += 1
                     continue
                 else:
                     break
             if counter == number_of_generators:
                 Z += [z]
+        return Subgroup(Z,self)
+    
+    def normalizer(self, H: Subgroup):
+        if self!=H.parent_group:
+            raise ValueError('subgroup provided is not a subgroup of this group')
+        Z = [self.identity]
+        for z in [x for x in self if x!=self.identity]:
+            if H.left_coset(z)==H.right_coset(z):
+                Z+=[z]
         return Subgroup(Z,self)
 
     def subgroup_generated_by(self, generators: list[GroupElement]):
