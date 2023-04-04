@@ -1,7 +1,7 @@
 import numpy as np
 import sympy
 
-import itertools
+from itertools import product
 from functools import reduce
 
 from group_theory.base.group_elements import (
@@ -21,7 +21,7 @@ def vector_addition(p: int, vec_1: tuple, vec_2: tuple):
 
 def linear_combinations(p: int, vector_list: list):
     number_of_vectors = len(vector_list)
-    all_scalar_combinations = list(itertools.product(*[range(p)]*number_of_vectors))
+    all_scalar_combinations = list(product(*[range(p)]*number_of_vectors))
     summand_list = []
     for combination in all_scalar_combinations:
         summand_list += [[scalar_multiplication(p,*x) for x in list(zip(combination,vector_list))]]
@@ -34,7 +34,7 @@ class GeneralLinear(Group):
 
     @classmethod
     def over_finite_field(cls, n: int, p: int):
-        starting_vectors = set(itertools.product(*[range(p)]*n))-{tuple([0]*n)}
+        starting_vectors = set(product(*[range(p)]*n))-{tuple([0]*n)}
         GL = []
         for v in starting_vectors:
             k = 0
@@ -63,7 +63,7 @@ class SpecialLinear(Group):
 
     @classmethod
     def over_finite_field(cls, n: int, p: int):
-        starting_vectors = set(itertools.product(*[range(p)]*n))-{tuple([0]*n)}
+        starting_vectors = set(product(*[range(p)]*n))-{tuple([0]*n)}
         GL = []
         for v in starting_vectors:
             k = 0
@@ -92,7 +92,7 @@ class Orthogonal(Group):
 
     @classmethod
     def over_finite_field(cls, n: int, p: int):
-        starting_vectors = set(itertools.product(*[range(p)]*n))-{tuple([0]*n)}
+        starting_vectors = set(product(*[range(p)]*n))-{tuple([0]*n)}
         GL = []
         for v in starting_vectors:
             k = 0
@@ -114,3 +114,28 @@ class ProjectiveOrthogonal(Group):
         z = [M for M in O if M.matrix.is_diagonal() and tuple(M.matrix.diagonal()) in {tuple([i]*n) for i in range(1,p)}]
         Z = Subgroup(z,O)
         return O/Z
+    
+
+def tri(n: int) -> int:
+    return sum(range(1,n+1))
+
+def tuple_to_matrix(n: int, t: tuple) -> sympy.Matrix:
+    '''
+    here, we need len(t)==tri(n)
+    '''
+    m = sympy.Matrix.eye(n)
+    counter = 0
+    for pair in [pairs for pairs in product(range(n),range(n)) if pairs[1]>pairs[0]]:
+        m[pair[0],pair[1]] =  t[counter]
+        counter+=1
+    return m
+
+class HeisenbergGroup(Group):
+    def __init__(self, elements: list[GroupElement]):
+        super().__init__(elements)
+
+    @classmethod
+    def over_finite_field(cls, n: int, p: int):
+        all_upper_entries = list(product(*[range(p)]*tri(n-1)))
+        H = [tuple_to_matrix(n,t) for t in all_upper_entries]
+        return cls([Matrix(M,p) for M in H])

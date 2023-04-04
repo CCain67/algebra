@@ -33,3 +33,6 @@ def test_gl_n_p_order():
 
 def test_sl_n_p_order():
     assert SpecialLinear.over_finite_field(2,3).order == get_gl_n_p_order(2,3)/2
+
+def test_heisenberg_order():
+    assert HeisenbergGroup.over_finite_field(3,5).order == 5**3

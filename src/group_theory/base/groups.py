@@ -13,6 +13,7 @@ class Group:
         self.identity = self.get_identity()
         self.canonical_generators = None
 
+        # properties
         self._generators = None
 
     def get_identity(self) -> GroupElement:
@@ -103,8 +104,6 @@ class Group:
             return self._generators
         else:
             return self._generators
-    
-    
         
     def center(self):
         Z = [self.identity]
