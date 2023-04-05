@@ -81,8 +81,19 @@ class Group:
             return True
         else:
             return False
+        
+    def is_abelian(self):
+        return self.commutator_subgroup().is_trivial()
+    
+    def is_solvable(self):
+        return self.derived_series()[-1].is_trivial()
+    
+    def is_nilpotent(self):
+        return self.lower_central_series()[-1].is_trivial()
     
     def get_random_generators(self) -> list[GroupElement]:
+        if len(self.elements)==1:
+            return [self[0]]
         generators = []
         elements = [g for g in self if not g.is_identity()]
         generators+=[sample(elements,1)[0]]
@@ -140,7 +151,9 @@ class Group:
                 Z+=[z]
         return Subgroup(Z,self)
 
-    def subgroup_generated_by(self, generators: list[GroupElement]):
+    def subgroup_generated_by(self, generators: list[GroupElement]) -> Subgroup:
+        if type(generators)!=list:
+            raise TypeError('the generators must be a list of group elements')
         '''
         this algorithm is the "black-box" algo found here:
         https://groupprops.subwiki.org/w/index.php?title=Black-box_group_algorithm_for_finding_the_subgroup_generated_by_a_subset
@@ -165,30 +178,38 @@ class Group:
             return self.subgroup_generated_by([g*x*y*(~x)*(~y)*(~g) for x in self.generators for y in self.generators for g in self.elements])
         else:
             return self.subgroup_generated_by([x*y*(~x)*(~y) for x in self.elements for y in self.elements])
-        
-    def is_abelian(self):
-        return self.commutator_subgroup().is_trivial()
     
     def derived_series(self):
         last_subgroup = Subgroup(self.elements, self)
-        D = [last_subgroup]
-        G = last_subgroup.elements
-        comm_subgroup = self.subgroup_generated_by([x*y*(~x)*(~y) for x in G for y in G])
-        while  comm_subgroup != last_subgroup:
-            D.append(comm_subgroup)
-            last_subgroup = comm_subgroup
-            G = last_subgroup.elements
-            comm_subgroup = self.subgroup_generated_by([x*y*(~x)*(~y) for x in G for y in G])
-        return D
-    
-    def is_solvable(self):
-        return self.derived_series()[-1].is_trivial()
+        derived_series_list = [last_subgroup]
+        next_subgroup = last_subgroup.commutator_subgroup()
+        while next_subgroup != last_subgroup:
+            derived_series_list.append(next_subgroup)
+            last_subgroup = next_subgroup
+            next_subgroup = last_subgroup.commutator_subgroup()
+        return derived_series_list
 
     def lower_central_series(self):
-        pass
+        last_subgroup = Subgroup(self.elements, self)
+        lower_central_series_list = [last_subgroup]
+        next_subgroup = last_subgroup.commutator_subgroup()
+        while next_subgroup != last_subgroup:
+            lower_central_series_list.append(next_subgroup)
+            last_subgroup = next_subgroup
+            next_subgroup = self.subgroup_generated_by([x*y*(~x)*(~y) for x in last_subgroup for y in self])
+        return lower_central_series_list
 
     def upper_central_series(self):
-        pass
+        last_center = Subgroup([self.identity], self)
+        upper_central_series_list = [last_center]
+        next_center = self.center()
+        while last_center != next_center:
+            upper_central_series_list.append(next_center)
+            last_center = next_center
+            next_center = Subgroup(
+                [x for x in self if {x*y*(~x)*(~y) for y in self}.issubset(last_center)], self
+            )
+        return upper_central_series_list
 
 class Subgroup(Group):
     def __init__(self, elements: list[GroupElement], parent_group: Group):
