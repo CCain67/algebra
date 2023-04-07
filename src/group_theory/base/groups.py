@@ -299,11 +299,6 @@ class Subgroup(Group):
         else: 
             return HK
     
-    def get_identity(self) -> GroupElement:
-        for g in self.elements:
-            if g.is_identity():
-                return g
-    
     def left_coset(self, g: GroupElement):
         if g not in self.parent_group:
             raise ValueError('group element must be a member of the parent group')
