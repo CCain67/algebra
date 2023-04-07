@@ -17,6 +17,8 @@ class Group:
 
         # properties
         self._generators = None
+        self._center = None
+        self._conjugacy_classes = None
 
     def get_identity(self) -> GroupElement:
         for g in self.elements:
@@ -117,13 +119,41 @@ class Group:
             return self._generators
         else:
             return self._generators
-        
-    def center(self):
+    
+    def get_center(self):
         '''
         the centralizer of the entire group is the center
         '''
         G = Subgroup(self.elements,self)
         return self.centralizer(G)
+    
+    @property
+    def center(self):
+        if self._center is None:
+            self._center = self.get_center()
+            return self._center
+        else:
+            return self._center
+
+    def get_conjugacy_classes(self):
+        '''
+        each element of the center forms a conjugacy class consisting of just itself, so we compute the center
+        first and the other classes second
+        '''
+        conjugacy_classes = set()
+        ZG = self.center
+        conjugacy_classes.update([frozenset({z}) for z in ZG])
+        for h in set(self.elements)-set(ZG.elements):
+            conjugacy_classes.add(frozenset({g*h*(~g) for g in self}))
+        return conjugacy_classes
+    
+    @property
+    def conjugacy_classes(self):
+        if self._conjugacy_classes is None:
+            self._conjugacy_classes = self.get_conjugacy_classes()
+            return self._conjugacy_classes
+        else:
+            return self._conjugacy_classes
     
     def centralizer(self, H: Subgroup):
         if self!=H.parent_group:
