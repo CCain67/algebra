@@ -1,5 +1,6 @@
 __pycache__
 _experiment_notebooks
 .pytest_cache
+.benchmarks
 *.ipynb
 TODO.md

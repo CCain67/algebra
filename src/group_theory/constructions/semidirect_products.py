@@ -2,7 +2,6 @@ from itertools import product
 
 from group_theory.base.groups import (
     Group,
-    Subgroup,
 )
 from group_theory.base.group_elements import GroupElement
 from group_theory.base.homomorphisms import Homomorphism
