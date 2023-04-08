@@ -1,5 +1,6 @@
+from typing import Type
+
 import numpy as np
-import sympy
 import galois
 
 from itertools import product
@@ -33,6 +34,10 @@ class GeneralLinear(Group):
 
     @classmethod
     def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        '''
+        this is essentially an implementation of the standard proof of the order of GL(n,q): an invertible matrix is produced row by row,
+        removing all linear combinations of the previous rows before selecting the next one, until all rows are filled. 
+        '''
         GF = galois.GF(characteristic,degree, repr="poly")
         starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
         starting_vectors = [GF(a) for a in starting_vector_arrays]
@@ -44,7 +49,9 @@ class GeneralLinear(Group):
                 v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
                 k+=1
             GL += [Matrix(GF(m), characteristic, degree) for m in v_lists]
-        return cls(GL)
+        GLnq = cls(GL)
+        GLnq.ground_field = GF
+        return GLnq
     
 
 class ProjectiveGeneralLinear(Group):
@@ -52,10 +59,13 @@ class ProjectiveGeneralLinear(Group):
         super().__init__(elements)
 
     @classmethod
-    def over_finite_field(cls, n: int, p: int):
-        GL = GeneralLinear.over_finite_field(n=n,p=p)
-        z = [M for M in GL if M.matrix.is_diagonal() and tuple(M.matrix.diagonal()) in {tuple([i]*n) for i in range(1,p)}]
-        Z = Subgroup(z,GL)
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        '''
+        all projective matrix groups are quotients by the center: the center happens to always be scalar multiples of the identity, 
+        which is faster to define than calling MatrixGroup.center
+        '''
+        GL = GeneralLinear.over_finite_field(dimension, characteristic, degree)
+        Z = Subgroup([Matrix(c*GL.ground_field.Identity(dimension),characteristic,degree) for c in GL.ground_field.elements],GL)
         return GL/Z
     
 class SpecialLinear(Group):
@@ -63,17 +73,22 @@ class SpecialLinear(Group):
         super().__init__(elements)
 
     @classmethod
-    def over_finite_field(cls, n: int, p: int):
-        starting_vectors = set(product(*[range(p)]*n))-{tuple([0]*n)}
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        GF = galois.GF(characteristic,degree, repr="poly")
+        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
+        starting_vectors = [GF(a) for a in starting_vector_arrays]
         GL = []
         for v in starting_vectors:
             k = 0
             v_lists = [[v]]
-            while k<n-1:
-                v_lists = [l+[w] for l in v_lists for w in starting_vectors-linear_combinations(p,l)]
+            while k<dimension-1:
+                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
                 k+=1
-            GL += [sympy.Matrix(m) for m in v_lists]
-        return cls([Matrix(M,p) for M in GL if M.det()%p==1])
+            GL += [GF(m) for m in v_lists]
+        SL = [Matrix(M, characteristic, degree) for M in GL if np.linalg.det(M)==1]
+        SLnq = cls(SL)
+        SLnq.ground_field = GF
+        return SLnq
     
 
 class ProjectiveSpecialLinear(Group):
@@ -81,10 +96,9 @@ class ProjectiveSpecialLinear(Group):
         super().__init__(elements)
 
     @classmethod
-    def over_finite_field(cls, n: int, p: int):
-        SL = SpecialLinear.over_finite_field(n=n,p=p)
-        z = [M for M in SL if M.matrix.is_diagonal() and tuple(M.matrix.diagonal()) in {tuple([i]*n) for i in range(1,p)}]
-        Z = Subgroup(z,SL)
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        SL = SpecialLinear.over_finite_field(dimension, characteristic, degree)
+        Z = Subgroup([Matrix(c*SL.ground_field.Identity(dimension),characteristic,degree) for c in SL.ground_field.elements],SL)
         return SL/Z
     
 class Orthogonal(Group):
@@ -92,51 +106,87 @@ class Orthogonal(Group):
         super().__init__(elements)
 
     @classmethod
-    def over_finite_field(cls, n: int, p: int):
-        starting_vectors = set(product(*[range(p)]*n))-{tuple([0]*n)}
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        GF = galois.GF(characteristic,degree, repr="poly")
+        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
+        starting_vectors = [GF(a) for a in starting_vector_arrays]
         GL = []
         for v in starting_vectors:
             k = 0
             v_lists = [[v]]
-            while k<n-1:
-                v_lists = [l+[w] for l in v_lists for w in starting_vectors-linear_combinations(p,l)]
+            while k<dimension-1:
+                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
                 k+=1
-            GL += [sympy.Matrix(m) for m in v_lists]
-        return cls([Matrix(M,p) for M in GL if M*M.transpose()%p==sympy.eye(n)])
+            GL += [GF(m) for m in v_lists]
+        O = [Matrix(M, characteristic, degree) for M in GL if (M*M.transpose()==GF.Identity(dimension)).all()]
+        Onq = cls(O)
+        Onq.ground_field = GF
+        return Onq
     
-
 class ProjectiveOrthogonal(Group):
     def __init__(self, elements: list[GroupElement]):
         super().__init__(elements)
 
     @classmethod
-    def over_finite_field(cls, n: int, p: int):
-        O = Orthogonal.over_finite_field(n=n,p=p)
-        z = [M for M in O if M.matrix.is_diagonal() and tuple(M.matrix.diagonal()) in {tuple([i]*n) for i in range(1,p)}]
-        Z = Subgroup(z,O)
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        O = Orthogonal.over_finite_field(dimension, characteristic, degree)
+        Z = Subgroup([Matrix(c*O.ground_field.Identity(dimension),characteristic,degree) for c in O.ground_field.elements],O)
         return O/Z
     
+class SpecialOrthogonal(Group):
+    def __init__(self, elements: list[GroupElement]):
+        super().__init__(elements)
+
+    @classmethod
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        GF = galois.GF(characteristic,degree, repr="poly")
+        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
+        starting_vectors = [GF(a) for a in starting_vector_arrays]
+        GL = []
+        for v in starting_vectors:
+            k = 0
+            v_lists = [[v]]
+            while k<dimension-1:
+                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
+                k+=1
+            GL += [GF(m) for m in v_lists]
+        O = [M for M in GL if (M*M.transpose()==GF.Identity(dimension)).all()]
+        SO = [Matrix(M, characteristic, degree) for M in O if np.linalg.det(M)==1]
+        SOnq = cls(SO)
+        SOnq.ground_field = GF
+        return SOnq
+    
+class ProjectiveSpecialOrthogonal(Group):
+    def __init__(self, elements: list[GroupElement]):
+        super().__init__(elements)
+
+    @classmethod
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        SO = SpecialOrthogonal.over_finite_field(dimension, characteristic, degree)
+        Z = Subgroup([Matrix(c*SO.ground_field.Identity(dimension),characteristic,degree) for c in SO.ground_field.elements],SO)
+        return SO/Z
 
 def tri(n: int) -> int:
     return sum(range(1,n+1))
 
-def tuple_to_matrix(n: int, t: tuple) -> sympy.Matrix:
+def tuple_to_matrix(dimension: int, GF: Type[galois.FieldArray], t: tuple) -> galois.FieldArray:
     '''
-    here, we need len(t)==tri(n)
+    here, we need len(t)==tri(dimension)
     '''
-    m = sympy.Matrix.eye(n)
+    M = GF.Identity(dimension)
     counter = 0
-    for pair in [pairs for pairs in product(range(n),range(n)) if pairs[1]>pairs[0]]:
-        m[pair[0],pair[1]] =  t[counter]
+    for pair in [pairs for pairs in product(range(dimension),range(dimension)) if pairs[1]>pairs[0]]:
+        M[pair[0],pair[1]] =  t[counter]
         counter+=1
-    return m
+    return M
 
 class HeisenbergGroup(Group):
     def __init__(self, elements: list[GroupElement]):
         super().__init__(elements)
 
     @classmethod
-    def over_finite_field(cls, n: int, p: int):
-        all_upper_entries = list(product(*[range(p)]*tri(n-1)))
-        H = [tuple_to_matrix(n,t) for t in all_upper_entries]
-        return cls([Matrix(M,p) for M in H])
+    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
+        GF = galois.GF(characteristic,degree, repr="poly")
+        all_upper_entries = [GF(e) for e in list(product(*[range(GF.order)]*tri(dimension-1)))]
+        H = [tuple_to_matrix(dimension, GF, t) for t in all_upper_entries]
+        return cls([Matrix(M, characteristic, degree) for M in H])
