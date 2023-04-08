@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from functools import reduce
 
 import math
-import sympy
 import numpy
+import galois
 
 class GroupElement(ABC):  
     @abstractmethod
@@ -278,33 +278,34 @@ class MultiplicativeResidueClass(ResidueClass):
             return False
 
 class Matrix(GroupElement):
-    def __init__(self, matrix: sympy.Matrix, characteristic: int):
-        self.matrix = matrix % characteristic
-        self.dimension = self.matrix.shape[0]
+    def __init__(self, matrix: galois.FieldArray, characteristic: int, degree: int):
+        self.matrix = matrix
         self.characteristic = characteristic
+        self.degree = degree
+        self.dimension = self.matrix.shape[0]
 
     def __repr__(self):
         rep = self.matrix.__repr__()
         return rep
 
     def __eq__(self,other):
-        return self.matrix==other.matrix
+        return (self.matrix==other.matrix).all()
     
     def __ne__(self,other):
-        return not self.matrix==other.matrix
+        return (self.matrix!=other.matrix).all()
     
     def __hash__(self) -> int:
-        return hash((tuple(self.matrix),self.characteristic))
+        return hash((self.matrix.tostring(), self.characteristic, self.degree))
     
     def __mul__(self,other):
-        return Matrix((self.matrix*other.matrix) % self.characteristic, self.characteristic)
+        return Matrix(self.matrix@other.matrix, self.characteristic, self.degree)
 
     def __invert__(self):
-        return Matrix(self.matrix.inv_mod(self.characteristic), self.characteristic)
+        return Matrix(numpy.linalg.inv(self.matrix), self.characteristic, self.degree)
 
     def __pow__(self, N: int):
         if N==0:
-            return Matrix(sympy.eye(self.dimension))
+            return Matrix(numpy.eye(self.dimension), self.characteristic, self.degree)
         if N>0:
             return reduce(lambda x,y: x*y, [self]*N)
         if N<0:
@@ -314,7 +315,7 @@ class Matrix(GroupElement):
         return 0
     
     def is_identity(self):
-        return self.matrix==sympy.eye(self.dimension)
+        return (self.matrix==galois.GF(self.characteristic, self.degree).Identity(self.dimension)).all()
 
 class CartesianProductElement(GroupElement):
     def __init__(self, elements: tuple[GroupElement]) -> None:

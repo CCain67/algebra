@@ -12,6 +12,6 @@ Most of basic (finite) group theory has been implemented:
 - representation and character theory of finite groups
 - group (co)homology
 
-#### You know GAP/Magma/Sage/et.c exists right??
+#### You know GAP/Magma/Sage/etc. exists right??
 Of course! Those tools are certainly better/faster, this is just for fun.
 
