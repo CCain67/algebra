@@ -152,7 +152,7 @@ class Permutation(GroupElement):
         matrix = numpy.zeros(shape)
         for k in self.permutation.keys():
             matrix[k-1,self.permutation[k]-1]=1
-        return Matrix(matrix, characteristic=2)
+        return Matrix(matrix, characteristic=2,degree=1)
 
 class ResidueClass(GroupElement):
     def __init__(self, residue: int,modulus: int):
@@ -203,7 +203,7 @@ class ResidueClass(GroupElement):
             raise ValueError('the residue and modulus must be relatively prime for a multiplicative inverse to exist')
         else:
             # this is Euler's theorem
-            exp = sympy.totient(self.modulus)-1
+            exp = galois.euler_phi(self.modulus)-1
             return ResidueClass(self.residue**exp,self.modulus)
 
     def get_order(self):
@@ -265,7 +265,7 @@ class MultiplicativeResidueClass(ResidueClass):
             raise ValueError('the residue and modulus must be relatively prime for a multiplicative inverse to exist')
         else:
             # this is Euler's theorem
-            exp = sympy.totient(self.modulus)-1
+            exp = galois.euler_phi(self.modulus)-1
             return MultiplicativeResidueClass(self.residue**exp,self.modulus)
         
     def get_order(self):
