@@ -15,18 +15,36 @@ from group_theory.base.groups import (
     Subgroup,
 )
 
-def linear_combinations(field, vector_list: list):
+def _linear_combinations(field, vector_list: list) -> list:
     number_of_vectors = len(vector_list)
     all_scalar_combinations = list(product(*[[field(i) for i in range(field.order)]]*number_of_vectors))
     summand_list = []
     for combination in all_scalar_combinations:
         summand_list += [[c*x for c,x in list(zip(combination,vector_list))]]
-    linear_combinations = [reduce(lambda x,y: x+y, summand) for summand in summand_list]
-    return linear_combinations
+    return [reduce(lambda x,y: x+y, summand) for summand in summand_list]
 
-def remove_linear_combos(field, starting_vectors, vector_list):
-    linear_combos = linear_combinations(field,vector_list)
+def _remove_linear_combos(field, starting_vectors, vector_list) -> list:
+    linear_combos = _linear_combinations(field,vector_list)
     return [z for z in starting_vectors if all(any(z!=y) for y in linear_combos)]
+
+def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list:
+    '''
+    this is essentially an implementation of the standard proof of the order of GL(n,q): an invertible matrix is produced row by row,
+    removing all linear combinations of the previous rows before selecting the next one, until all rows are filled. 
+    '''
+    characteristic = GF.characteristic
+    degree = GF.degree
+    starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:] # the 0th array is always (0,0,...,0)
+    starting_vectors = [GF(a) for a in starting_vector_arrays]
+    GL = []
+    for v in starting_vectors:
+        k = 0
+        v_lists = [[v]]
+        while k<dimension-1:
+            v_lists = [l+[w] for l in v_lists for w in _remove_linear_combos(GF,starting_vectors,l)]
+            k+=1
+        GL += [Matrix(GF(m), characteristic, degree) for m in v_lists]
+    return GL
 
 class GeneralLinear(Group):
     def __init__(self, elements: list[GroupElement]):
@@ -34,22 +52,8 @@ class GeneralLinear(Group):
 
     @classmethod
     def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        '''
-        this is essentially an implementation of the standard proof of the order of GL(n,q): an invertible matrix is produced row by row,
-        removing all linear combinations of the previous rows before selecting the next one, until all rows are filled. 
-        '''
         GF = galois.GF(characteristic,degree, repr="poly")
-        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
-        starting_vectors = [GF(a) for a in starting_vector_arrays]
-        GL = []
-        for v in starting_vectors:
-            k = 0
-            v_lists = [[v]]
-            while k<dimension-1:
-                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
-                k+=1
-            GL += [Matrix(GF(m), characteristic, degree) for m in v_lists]
-        GLnq = cls(GL)
+        GLnq = cls(_get_GLnq_matrices(GF, dimension))
         GLnq.ground_field = GF
         return GLnq
     
@@ -62,7 +66,7 @@ class ProjectiveGeneralLinear(Group):
     def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
         '''
         all projective matrix groups are quotients by the center: the center happens to always be scalar multiples of the identity, 
-        which is faster to define than calling MatrixGroup.center
+        which is faster to define than calling Group.center
         '''
         GL = GeneralLinear.over_finite_field(dimension, characteristic, degree)
         Z = Subgroup([Matrix(c*GL.ground_field.Identity(dimension),characteristic,degree) for c in GL.ground_field.elements],GL)
@@ -75,17 +79,8 @@ class SpecialLinear(Group):
     @classmethod
     def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
         GF = galois.GF(characteristic,degree, repr="poly")
-        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
-        starting_vectors = [GF(a) for a in starting_vector_arrays]
-        GL = []
-        for v in starting_vectors:
-            k = 0
-            v_lists = [[v]]
-            while k<dimension-1:
-                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
-                k+=1
-            GL += [GF(m) for m in v_lists]
-        SL = [Matrix(M, characteristic, degree) for M in GL if np.linalg.det(M)==1]
+        GL = _get_GLnq_matrices(GF, dimension)
+        SL = [M for M in GL if np.linalg.det(M.matrix)==1]
         SLnq = cls(SL)
         SLnq.ground_field = GF
         return SLnq
@@ -107,18 +102,10 @@ class Orthogonal(Group):
 
     @classmethod
     def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        GF = galois.GF(characteristic,degree, repr="poly")
-        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
-        starting_vectors = [GF(a) for a in starting_vector_arrays]
-        GL = []
-        for v in starting_vectors:
-            k = 0
-            v_lists = [[v]]
-            while k<dimension-1:
-                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
-                k+=1
-            GL += [GF(m) for m in v_lists]
-        O = [Matrix(M, characteristic, degree) for M in GL if (M*M.transpose()==GF.Identity(dimension)).all()]
+        
+        GF = galois.GF(characteristic, degree, repr="poly")
+        GL = _get_GLnq_matrices(GF, dimension)
+        O = [M for M in GL if (M.matrix@M.matrix.transpose()==GF.Identity(dimension)).all()]
         Onq = cls(O)
         Onq.ground_field = GF
         return Onq
@@ -140,18 +127,9 @@ class SpecialOrthogonal(Group):
     @classmethod
     def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
         GF = galois.GF(characteristic,degree, repr="poly")
-        starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:]
-        starting_vectors = [GF(a) for a in starting_vector_arrays]
-        GL = []
-        for v in starting_vectors:
-            k = 0
-            v_lists = [[v]]
-            while k<dimension-1:
-                v_lists = [l+[w] for l in v_lists for w in remove_linear_combos(GF,starting_vectors,l)]
-                k+=1
-            GL += [GF(m) for m in v_lists]
-        O = [M for M in GL if (M*M.transpose()==GF.Identity(dimension)).all()]
-        SO = [Matrix(M, characteristic, degree) for M in O if np.linalg.det(M)==1]
+        GL = _get_GLnq_matrices(GF, dimension)
+        O = [M for M in GL if (M.matrix@M.matrix.transpose()==GF.Identity(dimension)).all()]
+        SO = [M for M in O if np.linalg.det(M.matrix)==1]
         SOnq = cls(SO)
         SOnq.ground_field = GF
         return SOnq

@@ -312,7 +312,7 @@ class Matrix(GroupElement):
             return reduce(lambda x,y: x*y, [~self]*abs(N))
 
     def get_order(self):
-        return 0
+        return 0 # TODO: implements this!
     
     def is_identity(self):
         return (self.matrix==galois.GF(self.characteristic, self.degree).Identity(self.dimension)).all()

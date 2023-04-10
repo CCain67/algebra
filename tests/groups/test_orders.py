@@ -20,7 +20,7 @@ def test_symmetric_group_order():
 def test_dihedral_group():
     assert DihedralGroup.as_permutation_group(7).order == 14
 
-def get_gl_n_p_order(n,q):
+def get_GLnq_order(n,q):
     k = 0
     prod = 1 
     while k<=n-1:
@@ -28,11 +28,57 @@ def get_gl_n_p_order(n,q):
         k += 1
     return prod
 
-def test_gl_n_p_order():
-    assert GeneralLinear.over_finite_field(2,3,1).order == get_gl_n_p_order(2,3)
+def get_SLnq_order(n,q):
+    return get_GLnq_order(n,q)/(q-1)
 
-def test_sl_n_p_order():
-    assert SpecialLinear.over_finite_field(2,3,1).order == get_gl_n_p_order(2,3)/2
+def negative_one_is_square(q):
+    if q % 2 == 0:
+        # since -1=1 in a field of char=2, -1 is trivially a square
+        return True
+    else:
+        return q % 4==1
+
+# currently only for characteristic != 2
+# see here: https://math.stackexchange.com/questions/564670/order-of-orthogonal-groups-over-finite-field
+def get_Onq_order(n,q):
+    if q % 2 == 0:
+        return NotImplemented
+    if n % 2 == 1:
+        k = (n-1)/2
+        i = 0
+        prod = 1
+        while i <= k-1:
+            prod *= (q**(2*k)-q**(2*i))
+            i+=1
+        return 2*(q**k)*prod 
+    else:
+        k = n/2
+        i = 1
+        prod = 1
+        while i < k:
+            prod *= (q**(2*k)-q**(2*i))
+            i+=1
+        if negative_one_is_square(q):
+            return 2*(q**k-1)*prod
+        else:
+            return 2*(q**k+(-1)**(k+1))*prod
+
+
+def test_GLnq_order():
+    assert GeneralLinear.over_finite_field(2,3,1).order == get_GLnq_order(2,3)
+
+def test_SLnq_order():
+    assert SpecialLinear.over_finite_field(2,3,1).order == get_SLnq_order(2,3)
+
+def test_Onq_order():
+    characteristic = 7
+    degree = 1
+    dimension = 2
+    assert Orthogonal.over_finite_field(dimension, characteristic, degree).order == get_Onq_order(dimension,characteristic**degree)
+    characteristic = 3
+    degree = 2
+    dimension = 2
+    assert Orthogonal.over_finite_field(dimension, characteristic, degree).order == get_Onq_order(dimension,characteristic**degree)
 
 def test_heisenberg_order():
     assert HeisenbergGroup.over_finite_field(3,5,1).order == 5**3

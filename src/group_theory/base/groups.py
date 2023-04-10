@@ -28,7 +28,9 @@ class Group:
                 return g
 
     def __repr__(self):
-        s = self.elements.__repr__()
+        s = ""
+        for g in self:
+            s+=repr(g)+'\n'
         return s
 
     def __mul__(self,other):
