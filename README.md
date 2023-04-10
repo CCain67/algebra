@@ -6,6 +6,7 @@ Most of basic (finite) group theory has been implemented:
 - There are simple and intuitive ways to define groups, subgroups, homomorphisms, etc. 
 - Symmetric/alternating groups, various matrix groups over finite fields, cyclic groups and groups of units of $\mathbb{Z}/n\mathbb{Z}$, dihedral groups and the Klein 4 group are all implemented.
 - Many of the above groups can be instantiated as matrix groups, or permutation groups.
+
 Utilizes the [galois](https://github.com/mhostetter/galois) package for finite field / number theory support 
 
 ## Future plans:
