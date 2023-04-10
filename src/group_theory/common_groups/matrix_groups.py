@@ -15,16 +15,16 @@ from group_theory.base.groups import (
     Subgroup,
 )
 
-def _linear_combinations(field, vector_list: list) -> list:
+def _linear_combinations(GF: Type[galois.FieldArray], vector_list: list) -> list:
     number_of_vectors = len(vector_list)
-    all_scalar_combinations = list(product(*[[field(i) for i in range(field.order)]]*number_of_vectors))
+    all_scalar_combinations = product(*[[GF(i) for i in range(GF.order)]]*number_of_vectors)
     summand_list = []
     for combination in all_scalar_combinations:
-        summand_list += [[c*x for c,x in list(zip(combination,vector_list))]]
+        summand_list += [[c*x for c,x in zip(combination,vector_list)]]
     return [reduce(lambda x,y: x+y, summand) for summand in summand_list]
 
-def _remove_linear_combos(field, starting_vectors, vector_list) -> list:
-    linear_combos = _linear_combinations(field,vector_list)
+def _remove_linear_combos(GF: Type[galois.FieldArray], starting_vectors: list, vector_list: list) -> list:
+    linear_combos = _linear_combinations(GF,vector_list)
     return [z for z in starting_vectors if all(any(z!=y) for y in linear_combos)]
 
 def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list:
@@ -34,8 +34,8 @@ def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list:
     '''
     characteristic = GF.characteristic
     degree = GF.degree
-    starting_vector_arrays = list(product(*[range(characteristic**degree)]*dimension))[1:] # the 0th array is always (0,0,...,0)
-    starting_vectors = [GF(a) for a in starting_vector_arrays]
+    starting_vector_entries = list(product(*[range(characteristic**degree)]*dimension))[1:] # the 0th tuple is always (0,0,...,0)
+    starting_vectors = [GF(a) for a in starting_vector_entries]
     GL = []
     for v in starting_vectors:
         k = 0
