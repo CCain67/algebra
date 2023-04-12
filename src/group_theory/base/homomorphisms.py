@@ -10,9 +10,9 @@ from group_theory.base.groups import (
 )
 
 class Homomorphism:
-    def __init__(self, domain: Group, map: Callable[[Tuple[GroupElement,...]],GroupElement], codomain: Group) -> None:
+    def __init__(self, domain: Group, morphism: Callable[[Tuple[GroupElement,...]],GroupElement], codomain: Group) -> None:
         self.domain = domain
-        self.map = map
+        self.morphism = morphism
         self.codomain = codomain
 
         # properties
@@ -44,7 +44,7 @@ class Homomorphism:
         self.domain.get_random_generators()
         augmented_generators = self.domain.generators+[a*b for a in self.domain.generators for b in self.domain.generators]
         G_times_H = self.domain*self.codomain
-        element_image_pairs = [CartesianProductElement((x,self.map(x))) for x in augmented_generators]
+        element_image_pairs = [CartesianProductElement((x,self.morphism(x))) for x in augmented_generators]
         X = G_times_H.subgroup_generated_by(element_image_pairs)
         return X
 
@@ -57,7 +57,7 @@ class Homomorphism:
             return self._graph
     
     def get_image(self) -> Group:
-        image_generators = [self.map(g) for g in self.domain.generators]
+        image_generators = [self.morphism(g) for g in self.domain.generators]
         return self.codomain.subgroup_generated_by(image_generators)
 
     @property
