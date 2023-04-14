@@ -21,6 +21,10 @@ class Group:
         self._commutator_subgroup = None
         self._conjugacy_classes = None
 
+    def get_orders(self) -> None:
+        for g in self:
+            g.get_order()
+
     def get_identity(self) -> GroupElement:
         for g in self.elements:
             if g.is_identity():
@@ -222,6 +226,34 @@ class Group:
             H = F.union(H)
             
         return Subgroup(list(H), self)
+    
+    def get_generator_representations(self) -> dict:
+        '''
+        this algorithm is a modified version of the subgroup_generated_by method above,
+        which produces for each element g of G, a list whose elements are generators
+        of G, with product equal to g.  
+        '''
+        e = self.identity
+        H = {e}
+        F = {e}
+        generator_dict = {e:[e]}
+        for g in self.generators:
+            generator_dict[g] = [g]
+
+        while F:
+            K = set()
+            for f in F:
+                for s in self.generators:
+                    x = f*s
+                    K.add(x)
+                    if x not in generator_dict.keys():
+                        # note: since F={e} to start, f is always in generator_dict.keys()
+                        generator_dict[x] = generator_dict[f]+[s]
+            K = K-H
+            F = K
+            H = F.union(H)
+            
+        return generator_dict
     
     def derived_series(self):
         last_subgroup = Subgroup(self.elements, self)

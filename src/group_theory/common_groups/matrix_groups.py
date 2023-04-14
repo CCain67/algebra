@@ -29,8 +29,9 @@ def _remove_linear_combos(GF: Type[galois.FieldArray], starting_vectors: list, v
 
 def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list:
     '''
-    this is essentially an implementation of the standard proof of the order of GL(n,q): an invertible matrix is produced row by row,
-    removing all linear combinations of the previous rows before selecting the next one, until all rows are filled. 
+    this is essentially an implementation of the standard proof of the order of GL(n,q): 
+    an invertible matrix is produced row by row, removing all linear combinations of the 
+    previous rows before selecting the next one, until all rows are filled. 
     '''
     characteristic = GF.characteristic
     degree = GF.degree

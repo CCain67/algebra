@@ -284,6 +284,8 @@ class Matrix(GroupElement):
         self.degree = degree
         self.dimension = self.matrix.shape[0]
 
+        self._order = None
+
     def __repr__(self):
         rep = self.matrix.__repr__()
         return rep
@@ -312,7 +314,20 @@ class Matrix(GroupElement):
             return reduce(lambda x,y: x*y, [~self]*abs(N))
 
     def get_order(self):
-        return 0 # TODO: implements this!
+        M = self
+        i=1
+        while not M.is_identity():
+            M *= self
+            i += 1
+        return i
+    
+    @property
+    def order(self):
+        if self._order is None:
+            self._order = self.get_order()
+            return self._order
+        else:
+            return self._order
     
     def is_identity(self):
         return (self.matrix==galois.GF(self.characteristic, self.degree).Identity(self.dimension)).all()
