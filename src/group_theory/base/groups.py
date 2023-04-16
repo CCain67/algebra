@@ -20,6 +20,7 @@ class Group:
         self._center = None
         self._commutator_subgroup = None
         self._conjugacy_classes = None
+        self._generator_representations = None
 
     def get_orders(self) -> None:
         for g in self:
@@ -102,6 +103,9 @@ class Group:
     
     def is_nilpotent(self):
         return self.lower_central_series()[-1].is_trivial()
+    
+    def abelianization(self):
+        return self/self.commutator_subgroup
     
     def get_random_generators(self) -> list[GroupElement]:
         if len(self.elements)==1:
@@ -229,9 +233,12 @@ class Group:
     
     def get_generator_representations(self) -> dict:
         '''
-        this algorithm is a modified version of the subgroup_generated_by method above,
+        this algorithm is a modified version of the subgroup_generated_by method,
         which produces for each element g of G, a list whose elements are generators
         of G, with product equal to g.  
+
+        for example, if G has generators g_1 and g_2, and g = (g_1^3)*(g_2^2)*(g_1), then 
+        the list associated with g is [g_1, g_1, g_1, g_2, g_2, g_1].
         '''
         e = self.identity
         H = {e}
@@ -254,6 +261,14 @@ class Group:
             H = F.union(H)
             
         return generator_dict
+    
+    @property
+    def generator_representations(self):
+        if self._generator_representations is None:
+            self._generator_representations = self.get_generator_representations()
+            return self._generator_representations
+        else:
+            return self._generator_representations
     
     def derived_series(self):
         last_subgroup = Subgroup(self.elements, self)
@@ -374,7 +389,7 @@ class Coset(GroupElement):
         self.elements = [self.g*x for x in self.subgroup]
 
     def __repr__(self):
-        return str(self.g)+'H'
+        return 'Coset('+str(self.g)+')'
     
     def __eq__(self, other):
         return set(self.elements)==set(other.elements)

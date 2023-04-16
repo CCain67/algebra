@@ -1,4 +1,5 @@
-from typing import Callable, Tuple
+from __future__ import annotations
+from typing import Callable, Tuple, Union
 from functools import reduce
 from itertools import product
 
@@ -11,11 +12,17 @@ from group_theory.base.groups import (
     Subgroup,
 )
 
+def homomorphism_factory(in_out_dict: dict) -> Callable:
+    def f(g: GroupElement) -> GroupElement:
+        return in_out_dict[g]
+    return f
+
 class Homomorphism:
     def __init__(self, domain: Group, morphism: Callable[[Tuple[GroupElement,...]],GroupElement], codomain: Group) -> None:
         self.domain = domain
         self.morphism = morphism
         self.codomain = codomain
+        self.in_out_dict = None
 
         # properties
         self._graph = None
@@ -29,6 +36,32 @@ class Homomorphism:
             s += str(g)+' -> '+str(self.morphism(g))+'\n'
         return s
     
+    def __mul__(self,other) -> Homomorphism:
+        if not isinstance(other, Homomorphism):
+            raise TypeError('type must be Homomorphism')
+        elif self.domain!=other.codomain:
+            raise ValueError('non-composable homomorphisms')
+        else:
+            self._morphism_to_in_out_dict()
+            in_out_dict = {g:self(other(g)) for g in other.domain.generators}
+            return Homomorphism.from_action_on_generators(other.domain, in_out_dict, self.codomain)
+        
+    def __pow__(self, N: int):
+        if self.domain!=self.codomain:
+            raise ValueError('Composing a Homomorphism with itself requires the domain and codomain to be equal')
+        elif N==0:
+            return Homomorphism.from_dict(self.domain, {g:g for g in self.domain}, self.codomain)
+        elif N>0:
+            return reduce(lambda x,y: x*y, [self]*N)
+        elif N<0:
+            return reduce(lambda x,y: x*y, [~self]*abs(N))
+            
+    def __invert__(self):
+        if not self.is_iso:
+            raise ValueError('only isomorphisms may be inverted')
+        else:
+            return Homomorphism.from_dict(self.codomain, {self(g):g for g in self.domain}, self.codomain)
+        
     def __eq__(self,other) -> bool:
         if self.domain != other.domain:
             raise ValueError('the domains of the homomorphisms are not equal')
@@ -36,8 +69,29 @@ class Homomorphism:
             raise ValueError('the codomains of the homomorphisms are not equal')
         return all([self.morphism(g)==other.morphism(g) for g in self.domain.generators])
     
-    def __getitem__(self, g): 
-        return self.morphism(g)
+    def __ne__(self,other) -> bool:
+        if self.domain != other.domain:
+            raise ValueError('the domains of the homomorphisms are not equal')
+        if self.codomain != other.codomain:
+            raise ValueError('the codomains of the homomorphisms are not equal')
+        return any([self.morphism(g)!=other.morphism(g) for g in self.domain.generators])
+    
+    def __hash__(self):
+        in_out_generators = {g:self(g) for g in self.domain.generators}
+        return hash((self.domain,frozenset(in_out_generators.items()),self.codomain))
+
+    def __call__(self, g):
+        try:
+            return self.morphism(g)
+        except:
+            self._fetch_remaining_images()
+            return self.morphism(g)
+
+    def is_identity(self):
+        return all([self.domain==self.codomain, *[self.morphism(g)==g for g in self.domain.generators]])
+    
+    def is_trivial(self):
+        return all([self.morphism(g)==self.codomain.identity for g in self.domain.generators])
 
     def validate_homomorphism(self) -> bool:
         '''
@@ -49,26 +103,46 @@ class Homomorphism:
         '''
         return self.graph.order==self.domain.order
     
+    def _fetch_remaining_images(self):
+        '''
+        in some cases, e.g. when defining Hom-sets, homomorphisms are defined only on generators for efficiency, 
+        and so the rest of the images need to be determined. 
+        '''
+        generator_in_out_dict = {g:self.morphism(g) for g in self.domain.generators}
+
+        generator_in_out_dict[self.domain.identity]=self.codomain.identity
+        generator_representations = self.domain.generator_representations
+        in_out_dict = {g:reduce(lambda x,y: x*y, [generator_in_out_dict[x] for x in generator_representations[g]]) for g in self.domain}
+        self.morphism  = homomorphism_factory(in_out_dict=in_out_dict)
+        return None
+    
+    def _morphism_to_in_out_dict(self):
+        try:
+            in_out_dict = {g:self.morphism(g) for g in self.domain}
+        except:
+            self._fetch_remaining_images()
+            in_out_dict = {g:self.morphism(g) for g in self.domain}
+        self.in_out_dict = in_out_dict
+        self.morphism = homomorphism_factory(in_out_dict=in_out_dict)
+        return None
+    
     @classmethod
     def from_action_on_generators(cls, domain: Group, generator_in_out_dict: dict, codomain: Group):
         if not set(domain.generators).issubset(set(generator_in_out_dict.keys())):
             raise ValueError('the generators of the domain must be present in the dictionary keys')
         
         generator_in_out_dict[domain.identity]=codomain.identity
-        generator_representations = domain.get_generator_representations()
+        generator_representations = domain.generator_representations
         in_out_dict = {g:reduce(lambda x,y: x*y, [generator_in_out_dict[x] for x in generator_representations[g]]) for g in domain}
 
-        def f(g: GroupElement) -> GroupElement:
-            return in_out_dict[g]
-        
-        return cls(domain, f, codomain)
+        return cls.from_dict(domain=domain, in_out_dict=in_out_dict, codomain=codomain)
 
     @classmethod
     def from_dict(cls, domain: Group, in_out_dict: dict, codomain: Group):
-        def f(g: GroupElement) -> GroupElement:
-            return in_out_dict[g]
-        
-        return cls(domain, f, codomain)
+        f = homomorphism_factory(in_out_dict=in_out_dict)
+        F = cls(domain, f, codomain)
+        F.in_out_dict = in_out_dict
+        return F
     
     def get_graph(self) -> Subgroup:
         '''
@@ -101,10 +175,13 @@ class Homomorphism:
             return self._image
         
     def get_kernel(self) -> Subgroup:
-        X = self.graph
-        G_times_H = self.domain*self.codomain
-        G_1 = Subgroup([p for p in G_times_H if p[1].is_identity()], G_times_H)
-        return Subgroup([p[0] for p in (X & G_1)], self.domain)
+        if self.in_out_dict:
+            return Subgroup([g for g in self if self.in_out_dict[g]==self.codomain.identity], self.domain)
+        else:
+            X = self.graph
+            G_times_H = self.domain*self.codomain
+            G_1 = Subgroup([p for p in G_times_H if p[1].is_identity()], G_times_H)
+            return Subgroup([p[0] for p in (X & G_1)], self.domain)
 
     @property
     def kernel(self):
@@ -131,14 +208,8 @@ class Homomorphism:
             return self._is_iso
         else:
             return self._is_iso
-        
 
-def homomorphism_factory(in_out_dict: dict) -> Callable:
-    def f(g: GroupElement) -> GroupElement:
-        return in_out_dict[g]
-    return f
-
-class GroupHomSet:
+class GroupHom:
     '''
     class representing the hom-set Hom(G,H) for two finite groups G and H.
     '''
@@ -149,7 +220,9 @@ class GroupHomSet:
 
     def __repr__(self):
         return str(self.homomorphisms)
-
+    
+    def __getitem__(self, key):
+        return self.homomorphisms[key]
 
     def get_all_homomorphisms(self):
         '''
@@ -186,3 +259,145 @@ class GroupHomSet:
             if F.validate_homomorphism():
                 homset.append(F)
         return homset
+    
+class Automorphism(Homomorphism, GroupElement):
+    def __init__(self, group: Group, morphism: Callable[[Tuple[GroupElement,...]],GroupElement]) -> None:
+        super().__init__(group, morphism, group)
+        self.group = group
+
+        # properties
+        self._order = None
+
+    def __mul__(self,other) -> Union[Homomorphism,Automorphism]:
+        if not isinstance(other, Homomorphism):
+            raise TypeError('type must be Homomorphism')
+        elif self.domain!=other.codomain:
+            raise ValueError('non-composable homomorphisms')
+        elif isinstance(other, Automorphism):
+            self._morphism_to_in_out_dict()
+            in_out_dict = {g:self(other(g)) for g in other.domain.generators}
+            return Automorphism.from_action_on_generators(G = self.group, generator_in_out_dict=in_out_dict)
+        else:
+            self._morphism_to_in_out_dict()
+            in_out_dict = {g:self(other(g)) for g in other.domain.generators}
+            return Homomorphism.from_action_on_generators(other.domain, in_out_dict, self.codomain)
+        
+    def __pow__(self, N: int) -> Automorphism:
+        if N==0:
+            return Automorphism.from_dict(self.domain, {g:g for g in self.domain})
+        elif N>0:
+            return reduce(lambda x,y: x*y, [self]*N)
+        elif N<0:
+            return reduce(lambda x,y: x*y, [~self]*abs(N))
+            
+    def __invert__(self) -> Automorphism:
+        return Automorphism.from_dict(self.domain, {self(g):g for g in self.domain})
+
+    def get_order(self):
+        A = self
+        i=1
+        while not A.is_identity():
+            A *= self
+            i += 1
+        return i
+    
+    @property
+    def order(self):
+        if self._order is None:
+            self._order = self.get_order()
+            return self._order
+        else:
+            return self._order
+    
+    @classmethod
+    def from_action_on_generators(cls, G: Group, generator_in_out_dict: dict) -> Automorphism:
+        if not set(G.generators).issubset(set(generator_in_out_dict.keys())):
+            raise ValueError('the generators of the domain must be present in the dictionary keys')
+        
+        generator_in_out_dict[G.identity]=G.identity
+        generator_representations = G.generator_representations
+        in_out_dict = {g:reduce(lambda x,y: x*y, [generator_in_out_dict[x] for x in generator_representations[g]]) for g in G}
+
+        return cls.from_dict(G=G, in_out_dict=in_out_dict)
+
+    @classmethod
+    def from_dict(cls, G: Group, in_out_dict: dict) -> Automorphism:
+        f = homomorphism_factory(in_out_dict=in_out_dict)
+        F = cls(G, f)
+        F.in_out_dict = in_out_dict
+        return F
+
+def aut_get_identity(G: Group) -> Automorphism:
+        identity_dict = {g:g for g in G}
+        eye = Automorphism.from_dict(G=G, in_out_dict=identity_dict)
+        eye.in_out_dict = identity_dict
+        return eye
+
+def Aut(G: Group) -> Group:
+    '''
+    Creates the group Aut(G) of automorphisms of the finite group G.
+
+    Fetching all possible automorphisms works just as above in GroupHomSet,
+    but with some slight modifications:
+    
+    1. for each generator g of G, we find all elements h in H such that 
+    order(h) = order(g) - these are the candidates for the image of g
+    
+    2. if f:G -> H is an automorphism, we must have f(xy)=f(x)f(y) 
+    and order(f(x)f(y)) = order(xy). if not, we move on to the 
+    next set of potential images of generators.
+    
+    3. once we are past this check, we call validate_homomorphism and check if the
+    kernel is trivial. if this passes, we append the automorphism to the list.    
+    '''
+    possible_images = {g:[h for h in G if g.order==h.order] for g in G.generators}
+
+    possible_homomorphisms = product(*[possible_images[g] for g in possible_images.keys()])
+    pre_hom_set = [{g:hom_base[i] for i, g in enumerate(possible_images.keys())} for hom_base in possible_homomorphisms]
+
+    automorphisms = []
+    for in_out_dict in pre_hom_set:
+        go_to_next_in_out = False
+        augmented_in_out_dict = in_out_dict
+        for a,b in product(G.generators,G.generators):
+            if (a*b).order == (in_out_dict[a]*in_out_dict[b]).order:
+                augmented_in_out_dict[a*b] = augmented_in_out_dict[a]*augmented_in_out_dict[b]
+            else:
+                go_to_next_in_out = True
+                break
+        if go_to_next_in_out:
+            continue
+        F = Automorphism(group=G,morphism=homomorphism_factory(in_out_dict))
+        if F.validate_homomorphism() and len(F.kernel)==1:
+            automorphisms.append(F)
+    AutG = Group(
+        automorphisms
+    )
+    AutG.identity = aut_get_identity(G)
+    return AutG
+
+def inner_automorphism_factory(g: GroupElement) -> Callable:
+        def inner_auto(x: GroupElement) -> GroupElement:
+            return g*x*(~g)
+        return inner_auto
+
+def Inn(G: Group) -> Group:
+    '''Creates the group Inn(G) of inner automorphisms of the finite group G.'''
+    inner_automorphisms = list(
+        {Automorphism(G, inner_automorphism_factory(g)) for g in G }
+    )
+    InnG = Group(
+        inner_automorphisms
+    )
+    InnG.identity = aut_get_identity(G)
+    return InnG
+
+def Out(G: Group) -> Group:
+    '''
+    Creates the group Out(G) of outer automorphisms of the finite group G.
+    
+    Out(G) is defined as the quoteint group Aut(G)/Inn(G).
+    '''
+    AutG = Aut(G)
+    InnG = Inn(G)
+    return AutG/Subgroup(InnG.elements, AutG)
