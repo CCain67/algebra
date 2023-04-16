@@ -46,7 +46,7 @@ class Homomorphism:
             in_out_dict = {g:self(other(g)) for g in other.domain.generators}
             return Homomorphism.from_action_on_generators(other.domain, in_out_dict, self.codomain)
         
-    def __pow__(self, N: int):
+    def __pow__(self, N: int) -> Homomorphism:
         if self.domain!=self.codomain:
             raise ValueError('Composing a Homomorphism with itself requires the domain and codomain to be equal')
         elif N==0:
@@ -56,7 +56,7 @@ class Homomorphism:
         elif N<0:
             return reduce(lambda x,y: x*y, [~self]*abs(N))
             
-    def __invert__(self):
+    def __invert__(self) -> Homomorphism:
         if not self.is_iso:
             raise ValueError('only isomorphisms may be inverted')
         else:
@@ -76,21 +76,21 @@ class Homomorphism:
             raise ValueError('the codomains of the homomorphisms are not equal')
         return any([self.morphism(g)!=other.morphism(g) for g in self.domain.generators])
     
-    def __hash__(self):
+    def __hash__(self) -> int:
         in_out_generators = {g:self(g) for g in self.domain.generators}
         return hash((self.domain,frozenset(in_out_generators.items()),self.codomain))
 
-    def __call__(self, g):
+    def __call__(self, g) -> GroupElement:
         try:
             return self.morphism(g)
         except:
             self._fetch_remaining_images()
             return self.morphism(g)
 
-    def is_identity(self):
+    def is_identity(self) -> bool:
         return all([self.domain==self.codomain, *[self.morphism(g)==g for g in self.domain.generators]])
     
-    def is_trivial(self):
+    def is_trivial(self) -> bool:
         return all([self.morphism(g)==self.codomain.identity for g in self.domain.generators])
 
     def validate_homomorphism(self) -> bool:
@@ -103,7 +103,7 @@ class Homomorphism:
         '''
         return self.graph.order==self.domain.order
     
-    def _fetch_remaining_images(self):
+    def _fetch_remaining_images(self) -> None:
         '''
         in some cases, e.g. when defining Hom-sets, homomorphisms are defined only on generators for efficiency, 
         and so the rest of the images need to be determined. 
@@ -114,9 +114,8 @@ class Homomorphism:
         generator_representations = self.domain.generator_representations
         in_out_dict = {g:reduce(lambda x,y: x*y, [generator_in_out_dict[x] for x in generator_representations[g]]) for g in self.domain}
         self.morphism  = _homomorphism_factory(in_out_dict=in_out_dict)
-        return None
     
-    def _morphism_to_in_out_dict(self):
+    def _morphism_to_in_out_dict(self) -> None:
         try:
             in_out_dict = {g:self.morphism(g) for g in self.domain}
         except:
@@ -124,10 +123,9 @@ class Homomorphism:
             in_out_dict = {g:self.morphism(g) for g in self.domain}
         self.in_out_dict = in_out_dict
         self.morphism = _homomorphism_factory(in_out_dict=in_out_dict)
-        return None
     
     @classmethod
-    def from_action_on_generators(cls, domain: Group, generator_in_out_dict: dict, codomain: Group):
+    def from_action_on_generators(cls, domain: Group, generator_in_out_dict: dict, codomain: Group) -> Homomorphism:
         if not set(domain.generators).issubset(set(generator_in_out_dict.keys())):
             raise ValueError('the generators of the domain must be present in the dictionary keys')
         
@@ -138,7 +136,7 @@ class Homomorphism:
         return cls.from_dict(domain=domain, in_out_dict=in_out_dict, codomain=codomain)
 
     @classmethod
-    def from_dict(cls, domain: Group, in_out_dict: dict, codomain: Group):
+    def from_dict(cls, domain: Group, in_out_dict: dict, codomain: Group) -> Homomorphism:
         f = _homomorphism_factory(in_out_dict=in_out_dict)
         F = cls(domain, f, codomain)
         F.in_out_dict = in_out_dict
@@ -155,19 +153,19 @@ class Homomorphism:
         return X
 
     @property
-    def graph(self):
+    def graph(self) -> Subgroup:
         if self._graph is None:
             self._graph = self.get_graph()
             return self._graph
         else:
             return self._graph
     
-    def get_image(self) -> Group:
+    def get_image(self) -> Subgroup:
         image_generators = [self.morphism(g) for g in self.domain.generators]
         return self.codomain.subgroup_generated_by(image_generators)
 
     @property
-    def image(self):
+    def image(self) -> Subgroup:
         if self._image is None:
             self._image = self.get_image()
             return self._image
@@ -184,7 +182,7 @@ class Homomorphism:
             return Subgroup([p[0] for p in (X & G_1)], self.domain)
 
     @property
-    def kernel(self):
+    def kernel(self) -> Subgroup:
         if self._kernel is None:
             self._kernel = self.get_kernel()
             return self._kernel
@@ -202,7 +200,7 @@ class Homomorphism:
             return False
 
     @property
-    def is_iso(self):
+    def is_iso(self) -> bool:
         if self._is_iso is None:
             self._is_iso = self.check_iso()
             return self._is_iso
@@ -218,13 +216,13 @@ class GroupHom:
         self.codomain = codomain
         self.homomorphisms = self.get_all_homomorphisms()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.homomorphisms)
     
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Homomorphism:
         return self.homomorphisms[key]
 
-    def get_all_homomorphisms(self):
+    def get_all_homomorphisms(self) -> list:
         '''
         fetching all possible homomorphisms works here as follows:
         
@@ -293,7 +291,7 @@ class Automorphism(Homomorphism, GroupElement):
     def __invert__(self) -> Automorphism:
         return Automorphism.from_dict(self.domain, {self(g):g for g in self.domain})
 
-    def get_order(self):
+    def get_order(self) -> int:
         A = self
         i=1
         while not A.is_identity():
@@ -302,7 +300,7 @@ class Automorphism(Homomorphism, GroupElement):
         return i
     
     @property
-    def order(self):
+    def order(self) -> int:
         if self._order is None:
             self._order = self.get_order()
             return self._order
