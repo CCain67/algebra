@@ -12,7 +12,7 @@ from group_theory.base.groups import (
     Subgroup,
 )
 
-def homomorphism_factory(in_out_dict: dict) -> Callable:
+def _homomorphism_factory(in_out_dict: dict) -> Callable:
     def f(g: GroupElement) -> GroupElement:
         return in_out_dict[g]
     return f
@@ -113,7 +113,7 @@ class Homomorphism:
         generator_in_out_dict[self.domain.identity]=self.codomain.identity
         generator_representations = self.domain.generator_representations
         in_out_dict = {g:reduce(lambda x,y: x*y, [generator_in_out_dict[x] for x in generator_representations[g]]) for g in self.domain}
-        self.morphism  = homomorphism_factory(in_out_dict=in_out_dict)
+        self.morphism  = _homomorphism_factory(in_out_dict=in_out_dict)
         return None
     
     def _morphism_to_in_out_dict(self):
@@ -123,7 +123,7 @@ class Homomorphism:
             self._fetch_remaining_images()
             in_out_dict = {g:self.morphism(g) for g in self.domain}
         self.in_out_dict = in_out_dict
-        self.morphism = homomorphism_factory(in_out_dict=in_out_dict)
+        self.morphism = _homomorphism_factory(in_out_dict=in_out_dict)
         return None
     
     @classmethod
@@ -139,7 +139,7 @@ class Homomorphism:
 
     @classmethod
     def from_dict(cls, domain: Group, in_out_dict: dict, codomain: Group):
-        f = homomorphism_factory(in_out_dict=in_out_dict)
+        f = _homomorphism_factory(in_out_dict=in_out_dict)
         F = cls(domain, f, codomain)
         F.in_out_dict = in_out_dict
         return F
@@ -255,7 +255,7 @@ class GroupHom:
                     break
             if go_to_next_in_out:
                 continue
-            F = Homomorphism(domain=self.domain,morphism=homomorphism_factory(in_out_dict),codomain=self.codomain)
+            F = Homomorphism(domain=self.domain,morphism=_homomorphism_factory(in_out_dict),codomain=self.codomain)
             if F.validate_homomorphism():
                 homset.append(F)
         return homset
@@ -322,12 +322,12 @@ class Automorphism(Homomorphism, GroupElement):
 
     @classmethod
     def from_dict(cls, G: Group, in_out_dict: dict) -> Automorphism:
-        f = homomorphism_factory(in_out_dict=in_out_dict)
+        f = _homomorphism_factory(in_out_dict=in_out_dict)
         F = cls(G, f)
         F.in_out_dict = in_out_dict
         return F
 
-def aut_get_identity(G: Group) -> Automorphism:
+def _aut_get_identity(G: Group) -> Automorphism:
         identity_dict = {g:g for g in G}
         eye = Automorphism.from_dict(G=G, in_out_dict=identity_dict)
         eye.in_out_dict = identity_dict
@@ -367,16 +367,16 @@ def Aut(G: Group) -> Group:
                 break
         if go_to_next_in_out:
             continue
-        F = Automorphism(group=G,morphism=homomorphism_factory(in_out_dict))
+        F = Automorphism(group=G,morphism=_homomorphism_factory(in_out_dict))
         if F.validate_homomorphism() and len(F.kernel)==1:
             automorphisms.append(F)
     AutG = Group(
         automorphisms
     )
-    AutG.identity = aut_get_identity(G)
+    AutG.identity = _aut_get_identity(G)
     return AutG
 
-def inner_automorphism_factory(g: GroupElement) -> Callable:
+def _inner_automorphism_factory(g: GroupElement) -> Callable:
         def inner_auto(x: GroupElement) -> GroupElement:
             return g*x*(~g)
         return inner_auto
@@ -384,12 +384,12 @@ def inner_automorphism_factory(g: GroupElement) -> Callable:
 def Inn(G: Group) -> Group:
     '''Creates the group Inn(G) of inner automorphisms of the finite group G.'''
     inner_automorphisms = list(
-        {Automorphism(G, inner_automorphism_factory(g)) for g in G }
+        {Automorphism(G, _inner_automorphism_factory(g)) for g in G }
     )
     InnG = Group(
         inner_automorphisms
     )
-    InnG.identity = aut_get_identity(G)
+    InnG.identity = _aut_get_identity(G)
     return InnG
 
 def Out(G: Group) -> Group:
