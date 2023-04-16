@@ -221,6 +221,21 @@ class GroupHom:
     
     def __getitem__(self, key) -> Homomorphism:
         return self.homomorphisms[key]
+    
+    def __iter__(self): 
+        return iter(self.homomorphisms)
+    
+    def __hash__(self):
+        return hash(frozenset(self.homomorphisms))
+    
+    def __len__(self):
+        return len(self.homomorphisms)
+    
+    def __eq__(self, other):
+        return set(self.homomorphisms)==set(other.homomorphisms)
+    
+    def __ne__(self, other):
+        return set(self.homomorphisms)!=set(other.homomorphisms)
 
     def get_all_homomorphisms(self) -> list:
         '''
