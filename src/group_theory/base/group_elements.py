@@ -21,12 +21,23 @@ class Permutation(GroupElement):
 
         # properties
         self._cycle_decomposition = None
+        self._cycle_type = None
         self._order = None
         self._sign = None
 
     def __repr__(self) -> str:
         self.cycle_notation = self.get_cycle_notation()
         return self.cycle_notation
+    
+    def __getitem__(self, key):
+        return self.permutation[key]
+    
+    def __len__(self):
+        L = len({k:self[k] for k in self.permutation.keys() if k!=self[k]})
+        if L==0:
+            return 1
+        else: 
+            return L
     
     def __eq__(self,other):
         return self.permutation==other.permutation
@@ -79,7 +90,6 @@ class Permutation(GroupElement):
                     updated_key_set = updated_key_set-set(cycle.keys())
         return "".join(cycle_list[::-1])
 
-    
     def get_cycle_decomposition(self):
         key_set = set(self.permutation.keys())
         updated_key_set = key_set
@@ -88,13 +98,15 @@ class Permutation(GroupElement):
             for k in key_set:
                 if k in updated_key_set:
                     cycle = self.find_cycle_dict(start=k)
-                    updated_key_set = updated_key_set-set(cycle.keys())
-                    if len(cycle)>1:                
-                        for i in set(self.permutation.keys())-set(cycle.keys()):
-                            cycle[i] = i
-                        cycle_list.append(Permutation(cycle))
+                    updated_key_set = updated_key_set-set(cycle.keys())             
+                    for i in set(self.permutation.keys())-set(cycle.keys()):
+                        cycle[i] = i
+                    cycle_list.append(Permutation(cycle))
 
         return cycle_list
+    
+    def get_cycle_type(self):
+        return sorted([len(p) for p in self.cycle_decomposition])
     
     @property
     def cycle_decomposition(self):
@@ -103,6 +115,14 @@ class Permutation(GroupElement):
             return self._cycle_decomposition
         else:
             return self._cycle_decomposition
+        
+    @property
+    def cycle_type(self):
+        if self._cycle_type == None:
+            self._cycle_type = self.get_cycle_type()
+            return self._cycle_type
+        else:
+            return self._cycle_type
         
     def get_order(self):
         count=1

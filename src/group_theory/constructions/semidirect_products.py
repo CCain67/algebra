@@ -16,6 +16,9 @@ class SemidirectProductElement(GroupElement):
         self.twist = twist
         self.num_elements = 2
 
+        # properties
+        self._order = None
+
     def __repr__(self):
         return str(self.elements)
     
@@ -43,8 +46,21 @@ class SemidirectProductElement(GroupElement):
     def __iter__(self): 
         return iter(self.elements)
 
-    def get_order(self):
-        return NotImplemented
+    def get_order(self) -> int:
+        A = self
+        i=1
+        while not A.is_identity():
+            A *= self
+            i += 1
+        return i
+    
+    @property
+    def order(self) -> int:
+        if self._order is None:
+            self._order = self.get_order()
+            return self._order
+        else:
+            return self._order
     
     def is_identity(self):
         return self.elements[0].is_identity() and self.elements[1].is_identity()

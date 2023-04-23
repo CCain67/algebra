@@ -325,7 +325,7 @@ class Subgroup(Group):
         return True
     
     def __repr__(self):
-        return str(self.elements)
+        return 'Subgroup('+str(self.generators)+')'
     
     def __eq__(self, other):
         return set(self.elements)==set(other.elements)
