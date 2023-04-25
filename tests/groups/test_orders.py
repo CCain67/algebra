@@ -65,20 +65,20 @@ def get_Onq_order(n,q):
 
 
 def test_GLnq_order():
-    assert GeneralLinear.over_finite_field(2,3,1).order == get_GLnq_order(2,3)
+    assert GL(2,3).order == get_GLnq_order(2,3)
 
 def test_SLnq_order():
-    assert SpecialLinear.over_finite_field(2,3,1).order == get_SLnq_order(2,3)
+    assert SL(2,3).order == get_SLnq_order(2,3)
 
 def test_Onq_order():
     characteristic = 7
     degree = 1
     dimension = 2
-    assert Orthogonal.over_finite_field(dimension, characteristic, degree).order == get_Onq_order(dimension,characteristic**degree)
+    assert O(dimension, characteristic**degree).order == get_Onq_order(dimension,characteristic**degree)
     characteristic = 3
     degree = 2
     dimension = 2
-    assert Orthogonal.over_finite_field(dimension, characteristic, degree).order == get_Onq_order(dimension,characteristic**degree)
+    assert O(dimension, characteristic**degree).order == get_Onq_order(dimension,characteristic**degree)
 
 def test_heisenberg_order():
-    assert HeisenbergGroup.over_finite_field(3,5,1).order == 5**3
+    assert HeisenbergGroup(3,5).order == 5**3

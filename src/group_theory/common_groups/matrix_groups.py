@@ -27,7 +27,7 @@ def _remove_linear_combos(GF: Type[galois.FieldArray], starting_vectors: list, v
     linear_combos = _linear_combinations(GF,vector_list)
     return [z for z in starting_vectors if all(any(z!=y) for y in linear_combos)]
 
-def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list:
+def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list[Matrix]:
     '''
     this is essentially an implementation of the standard proof of the order of GL(n,q): 
     an invertible matrix is produced row by row, removing all linear combinations of the 
@@ -47,108 +47,101 @@ def _get_GLnq_matrices(GF: Type[galois.FieldArray], dimension: int) -> list:
         GL += [Matrix(GF(m), characteristic, degree) for m in v_lists]
     return GL
 
-class GeneralLinear(Group):
+def _filter_determinant_one(matrix_list: list[Matrix]) -> list[Matrix]:
+    return [M for M in matrix_list if np.linalg.det(M.matrix)==1]
+
+def _filter_orthogonal(matrix_list: list[Matrix], GF: Type[galois.FieldArray], dimension: int) -> list[Matrix]:
+    return [M for M in matrix_list if (M.matrix@M.matrix.transpose()==GF.Identity(dimension)).all()]
+
+def _get_central_elements(matrix_list: list[Matrix], GF: Type[galois.FieldArray], dimension: int) -> list[Matrix]:
+    return [
+        Matrix(c*GF.Identity(dimension),GF.characteristic, GF.degree) for c in GF.elements 
+        if Matrix(c*GF.Identity(dimension),GF.characteristic,GF.degree) in matrix_list
+    ]
+
+
+class LinearGroup(Group):
     def __init__(self, elements: list[GroupElement]):
         super().__init__(elements)
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        GF = galois.GF(characteristic,degree, repr="poly")
-        GLnq = cls(_get_GLnq_matrices(GF, dimension))
-        GLnq.ground_field = GF
-        return GLnq
-    
 
-class ProjectiveGeneralLinear(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def GL(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GLnq = LinearGroup(_get_GLnq_matrices(GF,n))
+    GLnq.ground_field = GF
+    return GLnq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        '''
-        all projective matrix groups are quotients by the center: the center happens to always be scalar multiples of the identity, 
-        which is faster to define than calling Group.center
-        '''
-        GL = GeneralLinear.over_finite_field(dimension, characteristic, degree)
-        Z = Subgroup([Matrix(c*GL.ground_field.Identity(dimension),characteristic,degree) for c in GL.ground_field.elements],GL)
-        return GL/Z
-    
-class SpecialLinear(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def SL(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = _get_GLnq_matrices(GF,n)
+    SLnq = LinearGroup(_filter_determinant_one(GL))
+    SLnq.ground_field = GF
+    return SLnq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        GF = galois.GF(characteristic,degree, repr="poly")
-        GL = _get_GLnq_matrices(GF, dimension)
-        SL = [M for M in GL if np.linalg.det(M.matrix)==1]
-        SLnq = cls(SL)
-        SLnq.ground_field = GF
-        return SLnq
-    
+def PGL(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = Group(_get_GLnq_matrices(GF,n))
+    Z = Subgroup(_get_central_elements(GL.elements, GF, n), GL)
+    PGLnq = LinearGroup(
+        (GL/Z).elements
+    )
+    PGLnq.ground_field = GF
+    return PGLnq
 
-class ProjectiveSpecialLinear(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def PSL(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = _get_GLnq_matrices(GF,n)
+    SL = Group(_filter_determinant_one(GL))
+    Z = Subgroup(_get_central_elements(SL.elements, GF, n), SL)
+    PSLnq = LinearGroup(
+        (SL/Z).elements
+    )
+    PSLnq.ground_field = GF
+    return PSLnq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        SL = SpecialLinear.over_finite_field(dimension, characteristic, degree)
-        Z = Subgroup([Matrix(c*SL.ground_field.Identity(dimension),characteristic,degree) for c in SL.ground_field.elements],SL)
-        return SL/Z
-    
-class Orthogonal(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def O(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = _get_GLnq_matrices(GF,n)
+    Onq = LinearGroup(_filter_orthogonal(GL, GF, n))
+    Onq.ground_field = GF
+    return Onq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        
-        GF = galois.GF(characteristic, degree, repr="poly")
-        GL = _get_GLnq_matrices(GF, dimension)
-        O = [M for M in GL if (M.matrix@M.matrix.transpose()==GF.Identity(dimension)).all()]
-        Onq = cls(O)
-        Onq.ground_field = GF
-        return Onq
-    
-class ProjectiveOrthogonal(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def SO(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = _get_GLnq_matrices(GF,n)
+    SL = _filter_determinant_one(GL)
+    SOnq = LinearGroup(_filter_orthogonal(SL, GF, n))
+    SOnq.ground_field = GF
+    return SOnq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        O = Orthogonal.over_finite_field(dimension, characteristic, degree)
-        Z = Subgroup([Matrix(c*O.ground_field.Identity(dimension),characteristic,degree) for c in O.ground_field.elements],O)
-        return O/Z
-    
-class SpecialOrthogonal(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def PO(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = _get_GLnq_matrices(GF,n)
+    O = Group(_filter_orthogonal(GL, GF, n))
+    Z = Subgroup(_get_central_elements(O.elements, GF, n), O)
+    POnq = LinearGroup(
+        (O/Z).elements
+    )
+    POnq.ground_field = GF
+    return POnq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        GF = galois.GF(characteristic,degree, repr="poly")
-        GL = _get_GLnq_matrices(GF, dimension)
-        O = [M for M in GL if (M.matrix@M.matrix.transpose()==GF.Identity(dimension)).all()]
-        SO = [M for M in O if np.linalg.det(M.matrix)==1]
-        SOnq = cls(SO)
-        SOnq.ground_field = GF
-        return SOnq
-    
-class ProjectiveSpecialOrthogonal(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
+def PSO(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr='poly')
+    GL = _get_GLnq_matrices(GF,n)
+    SL = _filter_determinant_one(GL)
+    SO = Group(_filter_orthogonal(SL, GF, n))
+    Z = Subgroup(_get_central_elements(SO.elements, GF, n), SO)
+    PSOnq = LinearGroup(
+        (SO/Z).elements
+    )
+    PSOnq.ground_field = GF
+    return PSOnq
 
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        SO = SpecialOrthogonal.over_finite_field(dimension, characteristic, degree)
-        Z = Subgroup([Matrix(c*SO.ground_field.Identity(dimension),characteristic,degree) for c in SO.ground_field.elements],SO)
-        return SO/Z
 
-def tri(n: int) -> int:
+def _tri(n: int) -> int:
     return sum(range(1,n+1))
 
-def tuple_to_matrix(dimension: int, GF: Type[galois.FieldArray], t: tuple) -> galois.FieldArray:
+def _tuple_to_matrix(dimension: int, GF: Type[galois.FieldArray], t: tuple) -> galois.FieldArray:
     '''
     here, we need len(t)==tri(dimension)
     '''
@@ -159,13 +152,10 @@ def tuple_to_matrix(dimension: int, GF: Type[galois.FieldArray], t: tuple) -> ga
         counter+=1
     return M
 
-class HeisenbergGroup(Group):
-    def __init__(self, elements: list[GroupElement]):
-        super().__init__(elements)
-
-    @classmethod
-    def over_finite_field(cls, dimension: int, characteristic: int, degree: int):
-        GF = galois.GF(characteristic,degree, repr="poly")
-        all_upper_entries = [GF(e) for e in list(product(*[range(GF.order)]*tri(dimension-1)))]
-        H = [tuple_to_matrix(dimension, GF, t) for t in all_upper_entries]
-        return cls([Matrix(M, characteristic, degree) for M in H])
+def HeisenbergGroup(n: int, q: int) -> LinearGroup:
+    GF = galois.GF(q, repr="poly")
+    all_upper_entries = [GF(e) for e in list(product(*[range(GF.order)]*_tri(n-1)))]
+    H = [_tuple_to_matrix(n, GF, t) for t in all_upper_entries]
+    Hnq = LinearGroup([Matrix(M, GF.characteristic, GF.degree) for M in H])
+    Hnq.ground_field = GF
+    return Hnq
