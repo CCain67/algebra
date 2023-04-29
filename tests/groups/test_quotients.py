@@ -7,6 +7,6 @@ from group_theory.common_groups.misc_groups import *
 
 
 def test_symmetric_quotient_alternating():
-    S = SymmetricGroup.as_permutation_group(4)
+    S = symmetric_group(4)
     A = S.commutator_subgroup
     assert (S/A).order == 2

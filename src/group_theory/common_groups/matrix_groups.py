@@ -152,7 +152,7 @@ def _tuple_to_matrix(dimension: int, GF: Type[galois.FieldArray], t: tuple) -> g
         counter+=1
     return M
 
-def HeisenbergGroup(n: int, q: int) -> LinearGroup:
+def heisenberg_group(n: int, q: int) -> LinearGroup:
     GF = galois.GF(q, repr="poly")
     all_upper_entries = [GF(e) for e in list(product(*[range(GF.order)]*_tri(n-1)))]
     H = [_tuple_to_matrix(n, GF, t) for t in all_upper_entries]

@@ -1,16 +1,16 @@
 import pytest
 
-from group_theory.common_groups.permutation_groups import SymmetricGroup
+from group_theory.common_groups.permutation_groups import symmetric_group
 
 
 class Base:
     order = None
 
     def setup_method(self):
-        self.Sym = SymmetricGroup.as_permutation_group(self.order)
+        self.Sym = symmetric_group(self.order)
 
     def test_load(self, benchmark):
-        benchmark(self.Sym.as_permutation_group,self.order)
+        benchmark(symmetric_group,self.order)
 
     def test_center(self, benchmark):
         benchmark(self.Sym.get_center)
