@@ -1,6 +1,6 @@
 import pytest
 
-from group_theory.base.group_elements import Permutation
+from group_theory.group_elements import Permutation
 
 
 class Base:

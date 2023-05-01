@@ -1,10 +1,7 @@
-from group_theory.base.group_elements import (
-    GroupElement,
-    Matrix,
+from group_theory.group_elements import (
     Permutation,
-    ResidueClass,
 )
-from group_theory.base.groups import Group
+from group_theory.groups import Group
 from group_theory.common_groups.residue_class_groups import cyclic_group
 
 def klein_four_group(repr: str = 'residue') -> Group:

@@ -1,10 +1,10 @@
 from itertools import product
 
-from group_theory.base.groups import (
+from group_theory.groups import (
     Group,
 )
-from group_theory.base.group_elements import GroupElement
-from group_theory.base.homomorphisms import Homomorphism
+from group_theory.group_elements import GroupElement
+from group_theory.homomorphisms import Homomorphism
 
 class SemidirectProductElement(GroupElement):
     '''

@@ -1,15 +1,11 @@
-import math
 import numpy
 
-from group_theory.base.group_elements import (
+from group_theory.group_elements import (
     AdditiveResidueClass,
-    GroupElement,
     Matrix,
-    MultiplicativeResidueClass,
     Permutation,
-    ResidueClass,
 )
-from group_theory.base.groups import Group
+from group_theory.groups import Group
 
 def cyclic_group(N: int, repr: str = 'residue') -> Group:
     if repr not in ['residue', 'permutation', 'matrix']:

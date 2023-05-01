@@ -5,10 +5,10 @@ from typing import (
     Type,
 )
 
-from group_theory.base.group_elements import (
+from group_theory.group_elements import (
     GroupElement,
 )
-from group_theory.base.groups import (
+from group_theory.groups import (
     Group,
     Subgroup,
 )
