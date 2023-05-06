@@ -6,6 +6,9 @@ from __future__ import annotations
 
 from random import sample
 from itertools import product
+from typing import Type
+
+import galois
 
 from group_theory.group_elements import (
     CartesianProductElement,
@@ -451,6 +454,20 @@ class Group:
                 self,
             )
         return upper_central_series_list
+
+
+class LinearGroup(Group):
+    """
+    Base class for groups of invertible matrices over finite fields.
+
+    In the future, this class will be used for group representations.
+    """
+
+    def __init__(
+        self, elements: list[GroupElement], ground_field: Type[galois.FieldArray]
+    ):
+        super().__init__(elements)
+        self.ground_field = ground_field
 
 
 class Subgroup(Group):

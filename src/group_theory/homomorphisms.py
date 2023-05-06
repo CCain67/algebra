@@ -587,7 +587,7 @@ def _check_class_preserving(
 
 
 def Aut(
-    G: Group, relative_subgroup: Subgroup = None, class_preserving: bool = False
+    group: Group, relative_subgroup: Subgroup = None, class_preserving: bool = False
 ) -> Group:
     """
     Creates the group Aut(G) of automorphisms of the finite group G.
@@ -620,7 +620,7 @@ def Aut(
     verify_preserves_subgroup = relative_subgroup is not None
 
     possible_generator_images = {
-        g: [h for h in G if g.order == h.order] for g in G.generators
+        g: [h for h in group if g.order == h.order] for g in group.generators
     }
     generator_image_choices = product(
         *[possible_generator_images[g] for g in possible_generator_images.keys()]
@@ -632,8 +632,8 @@ def Aut(
 
     inner_automorphisms = list(
         {
-            Automorphism(G, _inner_automorphism_factory(g))
-            for g in [G.identity] + [x for x in G if x not in G.center]
+            Automorphism(group, _inner_automorphism_factory(g))
+            for g in [group.identity] + [x for x in group if x not in group.center]
         }
     )
     if verify_preserves_subgroup:
@@ -644,7 +644,7 @@ def Aut(
         ]
     automorphisms += inner_automorphisms
     inner_auto_generator_images = [
-        {g: inn(g) for g in G.generators} for inn in inner_automorphisms
+        {g: inn(g) for g in group.generators} for inn in inner_automorphisms
     ]
 
     potential_automorphisms = [
@@ -655,13 +655,13 @@ def Aut(
     potential_automorphisms = [
         in_out_dict
         for in_out_dict in potential_automorphisms
-        if _check_order_condition(G, in_out_dict)
+        if _check_order_condition(group, in_out_dict)
     ]
     updated_potential_automorphisms = copy(potential_automorphisms)
 
     for in_out_dict in potential_automorphisms:
         if in_out_dict in updated_potential_automorphisms:
-            automorphism = Automorphism.from_action_on_generators(G, in_out_dict)
+            automorphism = Automorphism.from_action_on_generators(group, in_out_dict)
 
             homomorphism_check = automorphism.validate_homomorphism()
             kernel_check = len(automorphism.kernel) == 1
@@ -686,7 +686,7 @@ def Aut(
                     .union(set(automorphisms))
                 )
                 generator_images_to_remove = [
-                    {g: A(g) for g in G.generators} for A in automorphisms
+                    {g: A(g) for g in group.generators} for A in automorphisms
                 ]
                 updated_potential_automorphisms = [
                     in_out_dict
@@ -707,7 +707,7 @@ def Aut(
             continue
 
     automorphism_group = Group(automorphisms)
-    automorphism_group.identity = _aut_get_identity(G)
+    automorphism_group.identity = _aut_get_identity(group)
     return automorphism_group
 
 
