@@ -1,8 +1,6 @@
 """This module defines functions for constructing the cyclic groups, 
 the Klein 4 group, and dihedral groups."""
 
-import numpy
-
 from group_theory.group_elements import (
     CyclicGroupElement,
     Permutation,
@@ -17,6 +15,7 @@ def cyclic_group(
 
     Args:
         N (int): order of the cyclic group to be constructed
+        generator_symbol (str): the symbol used to represent the generator of the group.
         representation (str, optional): Representation of the cyclic group elements.
         Defaults to "residue".
 
