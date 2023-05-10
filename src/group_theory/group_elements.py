@@ -31,6 +31,91 @@ class GroupElement(ABC):
         """
 
 
+class CyclicGroupElement(GroupElement):
+    """Base class representing elements of cyclic groups."""
+
+    def __init__(self, symbol: str, generator_order: int, power: int) -> None:
+        self.symbol = symbol
+        self.generator_order = generator_order
+        self.power = power % generator_order
+
+    def __repr__(self) -> str:
+        if self.power == 0:
+            return "1"
+        return self.symbol + "^" + str(self.power)
+
+    def __hash__(self):
+        return hash((self.symbol, self.generator_order, self.power))
+
+    def __eq__(self, other: CyclicGroupElement) -> bool:
+        return all(
+            (
+                self.symbol == other.symbol,
+                self.generator_order == other.generator_order,
+                self.power == other.power,
+            )
+        )
+
+    def __ne__(self, other: CyclicGroupElement) -> bool:
+        return any(
+            (
+                self.symbol != other.symbol,
+                self.generator_order != other.generator_order,
+                self.power != other.power,
+            )
+        )
+
+    def __mul__(self, other: CyclicGroupElement) -> CyclicGroupElement:
+        if self.symbol != other.symbol or self.generator_order != other.generator_order:
+            raise ValueError(
+                "the CyclicGroupElements must be elements of the same group for multiplication"
+            )
+        return CyclicGroupElement(
+            self.symbol, self.generator_order, self.power + other.power
+        )
+
+    def __pow__(self, power: int):
+        if power > 0:
+            return reduce(lambda x, y: x * y, [self] * power)
+        if power < 0:
+            return reduce(lambda x, y: x * y, [~self] * abs(power))
+        return CyclicGroupElement(self.symbol, self.generator_order, 0)
+
+    def __invert__(self):
+        return CyclicGroupElement(self.symbol, self.generator_order, -1 * self.power)
+
+    def get_order(self):
+        return int(self.generator_order / galois.gcd(self.power, self.generator_order))
+
+    def is_identity(self):
+        return self.power == 0
+
+    def to_permutation(self) -> Permutation:
+        """Converts the cyclic group element to a permutation.
+
+        Returns:
+            Permutation: a permutation representation of the cyclic group element.
+        """
+        generator = {i: i + 1 for i in range(1, self.generator_order)}
+        generator[self.generator_order] = 1
+        return generator**self.power
+
+    def to_matrix(self) -> Matrix:
+        """Converts the cyclic group element into a permutation matrix (with
+        Z/2Z coefficients).
+
+        Returns:
+            Matrix: a permutation matrix representing the cyclic group element.
+        """
+        GF = galois.GF(2)
+        generator = {i: i + 1 for i in range(1, self.generator_order)}
+        generator[self.generator_order] = 1
+        matrix_generator = GF.Zeros((self.generator_order, self.generator_order))
+        for k in generator.keys():
+            matrix_generator[k - 1, generator[k] - 1] = 1
+        return Matrix(matrix_generator, 2, 1)
+
+
 class Permutation(GroupElement):
     """Class representing an element of a permutation group.
 
@@ -309,146 +394,6 @@ class Permutation(GroupElement):
         for k in self.permutation.keys():
             matrix[k - 1, self.permutation[k] - 1] = 1
         return Matrix(matrix, characteristic=2, degree=1)
-
-
-class ResidueClass(GroupElement):
-    def __init__(self, residue: int, modulus: int):
-        self.modulus = modulus
-        self.residue = residue % modulus
-        self.order = self.get_order()
-
-    def __repr__(self):
-        return "[" + str(self.residue) + "]"
-
-    def __hash__(self):
-        return hash((self.residue, self.modulus))
-
-    def __eq__(self, other):
-        return (self.residue == other.residue) and (self.modulus == other.modulus)
-
-    def __ne__(self, other):
-        return not (self.residue == other.residue) or not (
-            self.modulus == other.modulus
-        )
-
-    def __add__(self, other):
-        if self.modulus != other.modulus:
-            raise ValueError("the moduli must be equal")
-        else:
-            return ResidueClass(
-                (self.residue + other.residue) % self.modulus, self.modulus
-            )
-
-    def __mul__(self, other):
-        if self.modulus != other.modulus:
-            raise ValueError("the moduli must be equal")
-        else:
-            return ResidueClass(
-                (self.residue * other.residue) % self.modulus, self.modulus
-            )
-
-    def __pow__(self, N: int):
-        if N == 0:
-            return ResidueClass(1, self.modulus)
-        if N > 0:
-            return reduce(lambda x, y: x * y, [self] * N)
-        if N < 0:
-            return reduce(lambda x, y: x * y, [~self] * abs(N))
-
-    def __neg__(self):
-        return ResidueClass(-self.residue, self.modulus)
-
-    def __sub__(self, other):
-        return self + (-other)
-
-    def __invert__(self):
-        if math.gcd(self.residue, self.modulus) != 1:
-            raise ValueError(
-                "the residue and modulus must be relatively prime for a multiplicative inverse to exist"
-            )
-        else:
-            # this is Euler's theorem
-            exp = galois.euler_phi(self.modulus) - 1
-            return ResidueClass(self.residue**exp, self.modulus)
-
-    def get_order(self):
-        pass
-
-    def is_identity(self):
-        pass
-
-
-class AdditiveResidueClass(ResidueClass):
-    def __init__(self, residue: int, modulus: int):
-        super().__init__(residue, modulus)
-
-    def __mul__(self, other):
-        if self.modulus != other.modulus:
-            raise ValueError("the moduli must be equal")
-        else:
-            return AdditiveResidueClass(
-                (self.residue + other.residue) % self.modulus, self.modulus
-            )
-
-    def __pow__(self, N: int):
-        if N == 0:
-            return AdditiveResidueClass(0, self.modulus)
-        if N > 0:
-            return reduce(lambda x, y: x * y, [self] * N)
-        if N < 0:
-            return reduce(lambda x, y: x * y, [~self] * abs(N))
-
-    def __invert__(self):
-        return AdditiveResidueClass(-self.residue, self.modulus)
-
-    def get_order(self):
-        return int(self.modulus / math.gcd(self.residue, self.modulus))
-
-    def is_identity(self):
-        if self.residue == 0:
-            return True
-        else:
-            return False
-
-
-class MultiplicativeResidueClass(ResidueClass):
-    def __init__(self, residue: int, modulus: int):
-        super().__init__(residue, modulus)
-
-    def __mul__(self, other):
-        if self.modulus != other.modulus:
-            raise ValueError("the moduli must be equal")
-        else:
-            return MultiplicativeResidueClass(
-                (self.residue * other.residue) % self.modulus, self.modulus
-            )
-
-    def __pow__(self, N: int):
-        if N == 0:
-            return MultiplicativeResidueClass(1, self.modulus)
-        if N > 0:
-            return reduce(lambda x, y: x * y, [self] * N)
-        if N < 0:
-            return reduce(lambda x, y: x * y, [~self] * abs(N))
-
-    def __invert__(self):
-        if math.gcd(self.residue, self.modulus) != 1:
-            raise ValueError(
-                "the residue and modulus must be relatively prime for a multiplicative inverse to exist"
-            )
-        else:
-            # this is Euler's theorem
-            exp = galois.euler_phi(self.modulus) - 1
-            return MultiplicativeResidueClass(self.residue**exp, self.modulus)
-
-    def get_order(self):
-        return int(self.modulus / math.gcd(self.residue, self.modulus))
-
-    def is_identity(self):
-        if self.residue == 1:
-            return True
-        else:
-            return False
 
 
 class Matrix(GroupElement):

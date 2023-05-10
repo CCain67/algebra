@@ -68,7 +68,7 @@ class GroupElementAdapter(GroupElement):
         return self.ring_element.is_multiplicative_identity()
 
 
-class RingResidueClass(RingElement):
+class ResidueClass(RingElement):
     """Base class for elements of the ring of integers modulo N."""
 
     def __init__(self, residue: int, modulus: int):
@@ -92,26 +92,22 @@ class RingResidueClass(RingElement):
     def __add__(self, other):
         if self.modulus != other.modulus:
             raise ValueError("the moduli must be equal")
-        return RingResidueClass(
-            (self.residue + other.residue) % self.modulus, self.modulus
-        )
+        return ResidueClass((self.residue + other.residue) % self.modulus, self.modulus)
 
     def __mul__(self, other):
         if self.modulus != other.modulus:
             raise ValueError("the moduli must be equal")
-        return RingResidueClass(
-            (self.residue * other.residue) % self.modulus, self.modulus
-        )
+        return ResidueClass((self.residue * other.residue) % self.modulus, self.modulus)
 
     def __pow__(self, N: int):
         if N > 0:
             return reduce(lambda x, y: x * y, [self] * N)
         if N < 0:
             return reduce(lambda x, y: x * y, [~self] * abs(N))
-        return RingResidueClass(1, self.modulus)
+        return ResidueClass(1, self.modulus)
 
     def __neg__(self):
-        return RingResidueClass(-self.residue, self.modulus)
+        return ResidueClass(-self.residue, self.modulus)
 
     def __sub__(self, other):
         return self + (-other)
@@ -124,7 +120,7 @@ class RingResidueClass(RingElement):
             )
         # this is Euler's theorem
         exp = galois.euler_phi(self.modulus) - 1
-        return RingResidueClass(self.residue**exp, self.modulus)
+        return ResidueClass(self.residue**exp, self.modulus)
 
     def additive_order(self):
         return int(self.modulus / galois.gcd(self.residue, self.modulus))

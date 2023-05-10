@@ -4,14 +4,15 @@ the Klein 4 group, and dihedral groups."""
 import numpy
 
 from group_theory.group_elements import (
-    AdditiveResidueClass,
-    Matrix,
+    CyclicGroupElement,
     Permutation,
 )
 from group_theory.groups import Group
 
 
-def cyclic_group(N: int, representation: str = "residue") -> Group:
+def cyclic_group(
+    N: int, generator_symbol: str = "a", representation: str = "symbolic"
+) -> Group:
     """Constructs the cyclic group of order N.
 
     Args:
@@ -25,22 +26,16 @@ def cyclic_group(N: int, representation: str = "residue") -> Group:
     Returns:
         Group: the cyclic group of order N.
     """
-    if representation not in ["residue", "permutation"]:
-        raise ValueError('repr must be one of: "residue" or "permutation"')
+    if representation not in ["symbolic", "permutation", "matrix"]:
+        raise ValueError(
+            'representation must be one of: "symbolic", "permutation", or "matrix"'
+        )
 
-    if representation == "residue":
-        g = AdditiveResidueClass(1, N)
-    elif representation == "permutation":
-        generator = {i: i + 1 for i in range(1, N)}
-        generator[N] = 1
-        g = Permutation(generator)
+    g = CyclicGroupElement(generator_symbol, N, 1)
+    if representation == "permutation":
+        g = g.to_permutation()
     elif representation == "matrix":
-        generator = {i: i + 1 for i in range(1, N)}
-        generator[N] = 1
-        matrix_generator = numpy.zeros((N, N))
-        for k in generator.keys():
-            matrix_generator[k - 1, generator[k] - 1] = 1
-        g = Matrix(matrix_generator, 2, 1)
+        g = g.to_matrix()
 
     cyc_group = Group([g**j for j in range(N)])
     cyc_group.canonical_generators = [g]
