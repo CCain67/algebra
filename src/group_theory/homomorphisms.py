@@ -548,7 +548,10 @@ def _inner_automorphism_factory(g: GroupElement) -> Callable:
 def Inn(group: Group) -> Group:
     """Creates the group Inn(G) of inner automorphisms of the finite group G."""
     inner_automorphisms = list(
-        {Automorphism(group, _inner_automorphism_factory(g)) for g in group}
+        {
+            Automorphism(group, _inner_automorphism_factory(g))
+            for g in [group.identity] + [x for x in group if x not in group.center]
+        }
     )
     inner_automorphism_group = Group(inner_automorphisms)
     inner_automorphism_group.identity = _aut_get_identity(group)
