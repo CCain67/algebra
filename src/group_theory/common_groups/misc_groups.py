@@ -82,12 +82,11 @@ def dihedral_group(sides: int, representation: str = "permutation") -> Group:
     cycle = {**{i: i + 1 for i in range(1, sides)}, sides: 1}
     flip = {1: 1, **{2 + i: sides - i for i in range(sides - 1)}}
 
-    if representation == "permutation":
-        r = Permutation(cycle)
-        s = Permutation(flip)
-    elif representation == "matrix":
-        r = Permutation(cycle).to_matrix()
-        s = Permutation(flip).to_matrix()
+    r = Permutation(cycle)
+    s = Permutation(flip)
+    if representation == "matrix":
+        r = r.to_matrix()
+        s = s.to_matrix()
 
     dihedral_group_elements = [
         (r**i) * (s**j) for i in range(sides) for j in range(2)
