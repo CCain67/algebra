@@ -18,7 +18,7 @@ def symmetric_group(N: int, representation: str = "permutation") -> Group:
 
     Raises:
         ValueError: Raised if N < 1.
-        ValueError: Raised if a bas representation option is passed.
+        ValueError: Raised if a bad representation option is passed.
 
     Returns:
         Group: the symmetric group on N syumbols.
@@ -62,7 +62,7 @@ def alternating_group(N: int, representation: str = "permutation") -> Group:
 
     Raises:
         ValueError: Raised if N < 1.
-        ValueError: Raised if a bas representation option is passed.
+        ValueError: Raised if a bad representation option is passed.
 
     Returns:
         Group: the alternating group on N syumbols.
