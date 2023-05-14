@@ -345,86 +345,6 @@ class Homomorphism:
         return self._is_iso
 
 
-class GroupHom:
-    """
-    Class representing the hom-set Hom(G,H) for two finite groups G and H.
-    """
-
-    def __init__(self, domain: Group, codomain: Group) -> None:
-        self.domain = domain
-        self.codomain = codomain
-        self.homomorphisms = self.get_all_homomorphisms()
-
-    def __repr__(self) -> str:
-        return str(self.homomorphisms)
-
-    def __getitem__(self, key) -> Homomorphism:
-        return self.homomorphisms[key]
-
-    def __iter__(self):
-        return iter(self.homomorphisms)
-
-    def __hash__(self) -> int:
-        return hash(frozenset(self.homomorphisms))
-
-    def __len__(self) -> int:
-        return len(self.homomorphisms)
-
-    def __eq__(self, other) -> bool:
-        return set(self.homomorphisms) == set(other.homomorphisms)
-
-    def __ne__(self, other) -> bool:
-        return set(self.homomorphisms) != set(other.homomorphisms)
-
-    def get_all_homomorphisms(self) -> list:
-        """
-        fetching all possible homomorphisms works as follows:
-
-        1. for each generator g of G, we find all elements h in H such that
-        order(h) divides order(g) - these are the candidates for the image of g
-
-        2. if f:G -> H is a homomorphism, we must have f(xy)=f(x)f(y), so we
-        check that order(f(x)f(y)) divides order of xy. if not, we move on to the
-        next set of potential images of generators.
-
-        3. once we are past this check, we call validate_homomorphism. if this passes,
-        we append the homomorphism to the list.
-        """
-        possible_images = {
-            g: [h for h in self.codomain if g.order % h.order == 0]
-            for g in self.domain.generators
-        }
-
-        possible_homomorphisms = product(
-            *[possible_images[g] for g in possible_images.keys()]
-        )
-
-        pre_hom_set = [
-            {g: hom_base[i] for i, g in enumerate(possible_images.keys())}
-            for hom_base in possible_homomorphisms
-        ]
-
-        homset = []
-        for in_out_dict in pre_hom_set:
-            go_to_next_in_out = False
-            for a, b in product(self.domain.generators, self.domain.generators):
-                if (a * b).order % (in_out_dict[a] * in_out_dict[b]).order == 0:
-                    in_out_dict[a * b] = in_out_dict[a] * in_out_dict[b]
-                else:
-                    go_to_next_in_out = True
-                    break
-            if go_to_next_in_out:
-                continue
-            homomorphism = Homomorphism(
-                domain=self.domain,
-                morphism=_homomorphism_factory(in_out_dict),
-                codomain=self.codomain,
-            )
-            if homomorphism.validate_homomorphism():
-                homset.append(homomorphism)
-        return homset
-
-
 class Automorphism(Homomorphism, GroupElement):
     """Class representing an automorphism of a finite group."""
 
@@ -531,197 +451,81 @@ class Automorphism(Homomorphism, GroupElement):
         return automorphism
 
 
-def _aut_get_identity(group: Group) -> Automorphism:
-    identity_dict = {g: g for g in group}
-    eye = Automorphism.from_dict(G=group, in_out_dict=identity_dict)
-    eye.in_out_dict = identity_dict
-    return eye
-
-
-def _inner_automorphism_factory(g: GroupElement) -> Callable:
-    def inner_auto(x: GroupElement) -> GroupElement:
-        return g * x * (~g)
-
-    return inner_auto
-
-
-def Inn(group: Group) -> Group:
-    """Creates the group Inn(G) of inner automorphisms of the finite group G."""
-    inner_automorphisms = list(
-        {
-            Automorphism(group, _inner_automorphism_factory(g))
-            for g in [group.identity] + [x for x in group if x not in group.center]
-        }
-    )
-    inner_automorphism_group = Group(inner_automorphisms)
-    inner_automorphism_group.identity = _aut_get_identity(group)
-    return inner_automorphism_group
-
-
-def _check_order_condition(group: Group, in_out_dict: dict) -> bool:
-    for a, b in product(group.generators, group.generators):
-        order_condition = (a * b).order == (in_out_dict[a] * in_out_dict[b]).order
-        if not order_condition:
-            return False
-    return True
-
-
-def _check_preserves_subgroup(
-    automorphism: Automorphism, subgroup: Subgroup, needs_verification: bool = False
-) -> bool:
-    if needs_verification:
-        return all((automorphism(h) in subgroup for h in subgroup.generators))
-    return True
-
-
-def _check_class_preserving(
-    automorphism: Automorphism, needs_verification: bool = False
-) -> bool:
-    if needs_verification:
-        conjugacy_classes_preserved = []
-        for conjugacy_class in automorphism.group.conjugacy_classes:
-            class_was_preserved = all(
-                (automorphism(g) in conjugacy_class for g in conjugacy_class)
-            )
-        conjugacy_classes_preserved.append(class_was_preserved)
-
-        return all(conjugacy_classes_preserved)
-    return True
-
-
-def Aut(
-    group: Group, relative_subgroup: Subgroup = None, class_preserving: bool = False
-) -> Group:
+class GroupHom:
     """
-    Creates the group Aut(G) of automorphisms of the finite group G.
-
-    Args:
-        - G: Group which we are forming the automorphism group of.
-        - relative_subgroup: if provided a relative_subgroup H, this function
-        computes the subgroup of Aut(G) consisting of automorphisms f:G -> G
-        such that f(H) = H.
-        - class_preserving: If True, this function returns the subgroup of all
-        automorphisms of G which preserve conjugacy classes.
-
-    Fetching all possible automorphisms works just as above in GroupHomSet,
-    but with some slight modifications:
-
-    0. First, construct all of the inner automorphisms, since it is not efficient
-    to have to discover them all over again.
-
-    1. For each generator g of G, we find all elements h in H such that
-    order(h) = order(g) - these are the candidates for the image of g
-
-    2. If f:G -> H is an automorphism, we must have f(xy)=f(x)f(y)
-    and order(f(x)f(y)) = order(xy). If not, we move on to the
-    next set of potential images of generators.
-
-    3. Once we are past this check, we call validate_homomorphism and check if the
-    kernel is trivial. If this passes, we append the automorphism to the list.
+    Class representing the hom-set Hom(G,H) for two finite groups G and H.
     """
-    automorphisms = []
-    verify_preserves_subgroup = relative_subgroup is not None
 
-    possible_generator_images = {
-        g: [h for h in group if g.order == h.order] for g in group.generators
-    }
-    generator_image_choices = product(
-        *[possible_generator_images[g] for g in possible_generator_images.keys()]
-    )
-    potential_automorphisms = [
-        {g: image_list[i] for i, g in enumerate(possible_generator_images.keys())}
-        for image_list in generator_image_choices
-    ]
+    def __init__(self, domain: Group, codomain: Group) -> None:
+        self.domain = domain
+        self.codomain = codomain
+        self.homomorphisms = self.get_all_homomorphisms()
 
-    inner_automorphisms = list(
-        {
-            Automorphism(group, _inner_automorphism_factory(g))
-            for g in [group.identity] + [x for x in group if x not in group.center]
+    def __repr__(self) -> str:
+        return str(self.homomorphisms)
+
+    def __getitem__(self, key) -> Homomorphism:
+        return self.homomorphisms[key]
+
+    def __iter__(self):
+        return iter(self.homomorphisms)
+
+    def __hash__(self) -> int:
+        return hash(frozenset(self.homomorphisms))
+
+    def __len__(self) -> int:
+        return len(self.homomorphisms)
+
+    def __eq__(self, other) -> bool:
+        return set(self.homomorphisms) == set(other.homomorphisms)
+
+    def __ne__(self, other) -> bool:
+        return set(self.homomorphisms) != set(other.homomorphisms)
+
+    def get_all_homomorphisms(self) -> list:
+        """
+        fetching all possible homomorphisms works as follows:
+
+        1. for each generator g of G, we find all elements h in H such that
+        order(h) divides order(g) - these are the candidates for the image of g
+
+        2. if f:G -> H is a homomorphism, we must have f(xy)=f(x)f(y), so we
+        check that order(f(x)f(y)) divides order of xy. if not, we move on to the
+        next set of potential images of generators.
+
+        3. once we are past this check, we call validate_homomorphism. if this passes,
+        we append the homomorphism to the list.
+        """
+        possible_images = {
+            g: [h for h in self.codomain if g.order % h.order == 0]
+            for g in self.domain.generators
         }
-    )
-    if verify_preserves_subgroup:
-        inner_automorphisms = [
-            inn
-            for inn in inner_automorphisms
-            if all((inn(h) in relative_subgroup for h in relative_subgroup.generators))
+
+        possible_homomorphisms = product(
+            *[possible_images[g] for g in possible_images.keys()]
+        )
+
+        pre_hom_set = [
+            {g: hom_base[i] for i, g in enumerate(possible_images.keys())}
+            for hom_base in possible_homomorphisms
         ]
-    automorphisms += inner_automorphisms
-    inner_auto_generator_images = [
-        {g: inn(g) for g in group.generators} for inn in inner_automorphisms
-    ]
 
-    potential_automorphisms = [
-        in_out_dict
-        for in_out_dict in potential_automorphisms
-        if in_out_dict not in inner_auto_generator_images
-    ]
-    potential_automorphisms = [
-        in_out_dict
-        for in_out_dict in potential_automorphisms
-        if _check_order_condition(group, in_out_dict)
-    ]
-    updated_potential_automorphisms = copy(potential_automorphisms)
-
-    for in_out_dict in potential_automorphisms:
-        if in_out_dict in updated_potential_automorphisms:
-            automorphism = Automorphism.from_action_on_generators(group, in_out_dict)
-
-            homomorphism_check = automorphism.validate_homomorphism()
-            kernel_check = len(automorphism.kernel) == 1
-            preserves_conjugacy_classes = _check_class_preserving(
-                automorphism, class_preserving
+        homset = []
+        for in_out_dict in pre_hom_set:
+            go_to_next_in_out = False
+            for a, b in product(self.domain.generators, self.domain.generators):
+                if (a * b).order % (in_out_dict[a] * in_out_dict[b]).order == 0:
+                    in_out_dict[a * b] = in_out_dict[a] * in_out_dict[b]
+                else:
+                    go_to_next_in_out = True
+                    break
+            if go_to_next_in_out:
+                continue
+            homomorphism = Homomorphism(
+                domain=self.domain,
+                morphism=_homomorphism_factory(in_out_dict),
+                codomain=self.codomain,
             )
-            fixes_subgroup = _check_preserves_subgroup(
-                automorphism, relative_subgroup, verify_preserves_subgroup
-            )
-
-            if all(
-                [
-                    homomorphism_check,
-                    kernel_check,
-                    preserves_conjugacy_classes,
-                    fixes_subgroup,
-                ]
-            ):
-                automorphisms = list(
-                    {A * automorphism for A in automorphisms}
-                    .union({automorphism * A for A in automorphisms})
-                    .union(set(automorphisms))
-                )
-                generator_images_to_remove = [
-                    {g: A(g) for g in group.generators} for A in automorphisms
-                ]
-                updated_potential_automorphisms = [
-                    in_out_dict
-                    for in_out_dict in updated_potential_automorphisms
-                    if in_out_dict not in generator_images_to_remove
-                ]
-            else:
-                generator_images_to_remove = [
-                    {g: A(in_out_dict[g]) for g in in_out_dict.keys()}
-                    for A in automorphisms
-                ]
-                updated_potential_automorphisms = [
-                    in_out_dict
-                    for in_out_dict in updated_potential_automorphisms
-                    if in_out_dict not in generator_images_to_remove
-                ]
-        else:
-            continue
-
-    automorphism_group = Group(automorphisms)
-    automorphism_group.identity = _aut_get_identity(group)
-    return automorphism_group
-
-
-def Out(group: Group) -> Group:
-    """
-    Creates the group Out(G) of outer automorphisms of the finite group G.
-
-    Out(G) is defined as the quoteint group Aut(G)/Inn(G).
-    """
-    automorphism_group = Aut(group)
-    inner_automorphism_group = Inn(group)
-    return automorphism_group / Subgroup(
-        inner_automorphism_group.elements, automorphism_group
-    )
+            if homomorphism.validate_homomorphism():
+                homset.append(homomorphism)
+        return homset

@@ -627,10 +627,10 @@ class Coset(GroupElement):
         return "Coset(" + str(self.g) + ")"
 
     def __eq__(self, other):
-        return set(self.elements) == set(other.elements)
+        return self.g * (~other.g) in self.subgroup
 
     def __ne__(self, other):
-        return set(self.elements) != set(other.elements)
+        return self.g * (~other.g) not in self.subgroup
 
     def __hash__(self):
         return hash(frozenset(self.elements))

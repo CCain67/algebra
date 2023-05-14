@@ -38,6 +38,7 @@ class CyclicGroupElement(GroupElement):
         self.symbol = symbol
         self.generator_order = generator_order
         self.power = power % generator_order
+        self.order = self.get_order()
 
     def __repr__(self) -> str:
         if self.power == 0:
@@ -168,8 +169,7 @@ class Permutation(GroupElement):
 
     def __mul__(self, other):
         composition = {
-            i: self.permutation[other.permutation[i]]
-            for i in range(1, self.num_letters + 1)
+            i: self.permutation[other.permutation[i]] for i in self.permutation
         }
         return Permutation(composition)
 
@@ -373,7 +373,7 @@ class Permutation(GroupElement):
         Returns:
             bool: True if the permutation is the identity, False otherwise.
         """
-        return self.permutation == {i: i for i in range(1, self.num_letters + 1)}
+        return self.permutation == {i: i for i in self.permutation.keys()}
 
     def to_matrix(self):
         """Converts the permutation into a matrix.
