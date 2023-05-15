@@ -461,24 +461,6 @@ class Subgroup(Group):
             raise ValueError("group element must be a member of the parent group")
         return {x * right_factor for x in self.elements}
 
-    def conjugate_subgroup(self, g: GroupElement) -> Subgroup:
-        """Computes the conjugate subgroup for a given element of the parent group.
-        If H is the subgroup in question, then this method returns the subgroup gHg^{-1}.
-
-        Args:
-            g (GroupElement): the element of the parent group to conjugate everything by.
-
-        Raises:
-            ValueError: this error is raised if the GroupElement provided is not
-            an element of the parent group.
-
-        Returns:
-            Subgroup: the conjugate subgroup g(self)g^{-1}.
-        """
-        if g not in self.parent_group:
-            raise ValueError("group element must be a member of the parent group")
-        return Subgroup([g * x * (~g) for x in self], self.parent_group)
-
     def check_normality(self) -> bool:
         """Checks whether or not the subgroup is a normal subgroup of the parent group.
 
