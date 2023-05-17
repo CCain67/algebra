@@ -7,6 +7,7 @@ from group_theory.groups import (
     Subgroup,
 )
 from group_theory.constructions.subgroup_constructions import (
+    centralizer,
     conjugate_subgroup,
     normalizer,
 )
@@ -80,9 +81,6 @@ def fetch_all_sylow_p_subgroups(group: Group, p: int) -> list:
 
     Returns:
         list: list of all Sylow p-subgroups of the given group.
-
-    TODO: speed this up, almost surely do not have to conjugate over all
-    elements of the group.
     """
     prime_factors = factors(group.order)
     prime_decomp = dict(list(zip(prime_factors[0], prime_factors[1])))
@@ -90,8 +88,9 @@ def fetch_all_sylow_p_subgroups(group: Group, p: int) -> list:
         raise ValueError("the order of the group must be divisible by the prime given")
 
     sylow_p = sylow_p_subgroup(group, p)
+    sylow_centralizer = centralizer(sylow_p, group)
     sylow_p_subgroups = set()
-    for g in group:
+    for g in (x for x in group if x not in sylow_centralizer):
         sylow_p_subgroups = sylow_p_subgroups.union({conjugate_subgroup(sylow_p, g)})
 
     return list(sylow_p_subgroups)

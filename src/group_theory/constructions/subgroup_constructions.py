@@ -83,7 +83,9 @@ def conjugate_subgroup(subgroup: Subgroup, g: GroupElement) -> Subgroup:
     """
     if g not in subgroup.parent_group:
         raise ValueError("group element must be a member of the parent group")
-    return Subgroup([g * x * (~g) for x in subgroup], subgroup.parent_group)
+    return subgroup.parent_group.subgroup_generated_by(
+        [g * h * (~g) for h in subgroup.generators]
+    )
 
 
 def normal_closure(elements: Iterable, group: Group) -> Subgroup:
