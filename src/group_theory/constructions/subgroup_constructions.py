@@ -27,16 +27,14 @@ def centralizer(subgroup: Subgroup, group: Group) -> Subgroup:
     if group != subgroup.parent_group:
         raise ValueError("subgroup provided is not a subgroup of this group")
     centralizer_elements = [group.identity]
-    number_of_generators = len(subgroup.generators)
     for z in [x for x in group if x != group.identity]:
-        counter = 0
+        add_to_centralizer = True
         for h in subgroup.generators:
             if z * h == h * z:
-                counter += 1
                 continue
-            else:
-                break
-        if counter == number_of_generators:
+            add_to_centralizer = False
+            break
+        if add_to_centralizer:
             centralizer_elements += [z]
     return Subgroup(centralizer_elements, group)
 
@@ -58,7 +56,13 @@ def normalizer(subgroup: Subgroup, group: Group) -> Subgroup:
         raise ValueError("subgroup provided is not a subgroup of this group")
     normalizer_elements = [group.identity]
     for z in [x for x in group if x != group.identity]:
-        if subgroup.left_coset(z) == subgroup.right_coset(z):
+        add_to_normalizer = True
+        for h in subgroup.generators:
+            if z * h * (~z) in subgroup:
+                continue
+            add_to_normalizer = False
+            break
+        if add_to_normalizer:
             normalizer_elements += [z]
     return Subgroup(normalizer_elements, group)
 
