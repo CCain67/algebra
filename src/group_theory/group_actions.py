@@ -136,7 +136,7 @@ class GroupAction:
 
     @property
     def is_free(self):
-        """Fetches the id_free property"""
+        """Fetches the is_free property"""
         if self._is_free is None:
             self._is_free = self.check_if_free()
             return self._is_free
