@@ -164,6 +164,17 @@ class Group:
         """
         return self / self.commutator_subgroup
 
+    def element_by_order(self, order: int) -> GroupElement:
+        """Fetches a random element of the group of the given order.
+
+        Args:
+            order (int): the order of the element to fetch
+
+        Returns:
+            GroupElement: an element of the proivded order.
+        """
+        return {g for g in self if g.order == order}.pop()
+
     def get_random_generators(self) -> list[GroupElement]:
         """Fetches a random generating set for the group.
 
@@ -407,7 +418,7 @@ class Subgroup(Group):
         return set(self.elements) == set(other.elements)
 
     def __hash__(self):
-        return hash((self.elements, self.parent_group))
+        return hash((frozenset(self.elements), self.parent_group))
 
     def __and__(self, other):
         if self.parent_group != other.parent_group:

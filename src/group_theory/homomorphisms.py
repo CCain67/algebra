@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import Callable, Tuple, Union
 from functools import reduce
 from itertools import product
-from copy import copy
 
 from group_theory.group_elements import (
     CartesianProductElement,
