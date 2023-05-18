@@ -92,7 +92,11 @@ class Group:
         """
         if isinstance(other, Subgroup):
             if other.parent_group == self:
-                cosets = {Coset(g, other) for g in self}
+                if not other.is_normal:
+                    raise ValueError("the subgroup passed is not normal")
+                cosets = {Coset(self.identity, other)}.union(
+                    {Coset(g, other) for g in self.generators}
+                )
                 return Group(list(cosets))
             raise ValueError(
                 "the subgroup provided is not a subgroup of the provided parent group"
@@ -481,8 +485,9 @@ class Subgroup(Group):
         if self.index == 2:  # index 2 subgroups are always normal
             return True
         for g in self.parent_group.generators:
-            if self.left_coset(g) != self.right_coset(g):
-                return False
+            for h in self.generators:
+                if g * h * (~g) not in self:
+                    return False
         return True
 
     @property
