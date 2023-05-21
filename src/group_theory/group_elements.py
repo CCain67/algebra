@@ -117,6 +117,170 @@ class CyclicGroupElement(GroupElement):
         return Matrix(matrix_generator, 2, 1)
 
 
+class PolyhedralGroupElement(GroupElement):
+    """Class representing elements of the general polyhedral groups. For now,
+    this includes dihedral, quasidihedral, and dicyclic/generalized quaternion
+    groups.
+
+    In each of these groups, there are two generators r and s, and all
+    elements may be written as a product of the form r^ks^i for some exponent k,
+    and i = 0 or 1.
+
+    The generator r can be thought of as a generalized rotation, and the generator
+    s can be thought of as a generalized reflection.
+
+    Args:
+        exponents tuple(int): a pair (k,i) where k is the power of r,
+        and i is the power of s, as above.
+        n (int): the parameter n used in the definition of the polyhedral
+        group.
+    """
+
+    def __init__(self, exponents: tuple(int), n: int) -> None:
+        self.exponents = (exponents[0], exponents[1] % 2)
+        self.n = n
+        self.modulus = None
+        self.shift = None
+        self.half_shift = None
+        self.r_symb = "r"
+        self.s_symb = "s"
+
+    def __repr__(self) -> str:
+        if self.is_identity():
+            return "1"
+        r_str = ""
+        s_str = ""
+        if self.exponents[0] > 0:
+            r_str = self.r_symb + "^" + str(self.exponents[0])
+        if self.exponents[1] == 1:
+            s_str += self.s_symb
+        return r_str + s_str
+
+    def __eq__(self, other) -> bool:
+        return (self.exponents == other.exponents) and (self.n == other.n)
+
+    def __hash__(self) -> int:
+        return hash((self.exponents, self.n))
+
+    def __mul__(self, other):
+        k = self.exponents[0]
+        i = self.exponents[1]
+        m = other.exponents[0]
+        j = other.exponents[1]
+        n = self.n
+
+        new_r_exponent = (
+            k + self.half_shift * i * j * n + self.shift * m
+        ) % self.modulus
+        new_s_exponent = (i + j) % 2
+        return self.__class__((new_r_exponent, new_s_exponent), self.n)
+
+    def __invert__(self):
+        k = self.exponents[0]
+        i = self.exponents[1]
+        n = self.n
+
+        k_inv = (
+            (self.modulus - k - self.half_shift * (i**2) * n) * self.shift
+        ) % self.modulus
+        return self.__class__((k_inv, i), self.n)
+
+    def __pow__(self, power: int):
+        if power > 0:
+            return reduce(lambda x, y: x * y, [self] * power)
+        if power < 0:
+            return reduce(lambda x, y: x * y, [~self] * abs(power))
+        return self.__class__((0, 0), self.n)
+
+    def get_order(self) -> int:
+        count = 1
+        product = self
+        while not product.is_identity():
+            product = product * self
+            count += 1
+        return count
+
+    def is_identity(self) -> bool:
+        return self.exponents == (0, 0)
+
+
+class DihedralGroupElement(PolyhedralGroupElement):
+    """Class representing elements of dihedral groups.
+
+    Args:
+        exponents (tuple[int]): a pair of exponents (k,i)
+        representing an element r^ks^i of the dihedral group.
+        n (int): the order of the rotation r.
+    """
+
+    def __init__(self, exponents: tuple(int), n: int) -> None:
+        exponents = (exponents[0] % n, exponents[1])
+        super().__init__(exponents, n)
+
+        self.modulus = n
+        self.shift = (-1) ** exponents[1]
+        self.half_shift = 0
+
+    def to_permutation(self) -> Permutation:
+        """Method which converts a dihedral group element into a permutation.
+
+        Returns:
+            Permutation: permutation representation of the dihedral group element.
+        """
+        cycle = {**{i: i + 1 for i in range(1, self.n)}, self.n: 1}
+        flip = {1: 1, **{2 + i: self.n - i for i in range(self.n - 1)}}
+
+        r = Permutation(cycle)
+        s = Permutation(flip)
+        return (r ** self.exponents[0]) * (s ** self.exponents[1])
+
+    def to_matrix(self) -> Matrix:
+        """Method which converts a dihedral group element into a matrix.
+
+        Returns:
+            Matrix: matrix representation of the dihedral group element.
+        """
+        return self.to_permutation().to_matrix()
+
+
+class QuasidihedralGroupElement(PolyhedralGroupElement):
+    """Class representing elements of quasidihedral groups.
+
+    Args:
+        exponents (tuple[int]): a pair of exponents (k,i)
+        representing an element r^ks^i of the quasidihedral group.
+        n (int): the order of the generalized rotation r.
+    """
+
+    def __init__(self, exponents: tuple(int), n: int) -> None:
+        exponents = (exponents[0] % (2 ** (n - 1)), exponents[1])
+        super().__init__(exponents, n)
+
+        self.modulus = 2 ** (n - 1)
+        self.shift = (self.modulus - 1) ** exponents[1]
+        self.half_shift = 0
+
+
+class DicyclicGroupElement(PolyhedralGroupElement):
+    """Class representing elements of dicyclic groups.
+
+    Args:
+        exponents (tuple[int]): a pair of exponents (k,i)
+        representing an element a^kx^i of the dicyclic group.
+        n (int): the order of the generalized rotation a.
+    """
+
+    def __init__(self, exponents: tuple(int), n: int) -> None:
+        exponents = (exponents[0] % (2 * n), exponents[1])
+        super().__init__(exponents, n)
+
+        self.modulus = 2 * n
+        self.shift = (-1) ** exponents[1]
+        self.half_shift = 0
+        self.r_symb = "a"
+        self.s_symb = "x"
+
+
 class Permutation(GroupElement):
     """Class representing an element of a permutation group.
 
@@ -495,8 +659,27 @@ class CartesianProductElement(GroupElement):
     """
 
     def __init__(self, elements: tuple[GroupElement]) -> None:
-        self.elements = elements
+        self.elements = self._flatten_nested_tuple(elements)
         self.num_elements = len(self.elements)
+
+    def _flatten_nested_tuple(self, nested_tuple: tuple) -> tuple[GroupElement]:
+        """Reduces a nested tuple into a single tuple. Example:
+
+        (((1,2),3),4) -> (1,2,3,4)
+
+        Args:
+            nested_tuple (tuple): a nested tuple of the form shown above.
+
+        Returns:
+            tuple[GroupElement]: a flattened tuple.
+        """
+
+        def reducer(acc, val):
+            if isinstance(val, CartesianProductElement):
+                return acc + self._flatten_nested_tuple(val)
+            return acc + (val,)
+
+        return reduce(reducer, nested_tuple, ())
 
     def __repr__(self):
         return str(tuple(x for x in self.elements))

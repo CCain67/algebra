@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from random import sample
 from itertools import product
+from functools import reduce
 from typing import Type
 
 import galois
@@ -77,6 +78,11 @@ class Group:
         )
         return Group(product_elements)
 
+    def __pow__(self, power: int):
+        if power <= 0:
+            raise ValueError("the exponent must be a positive integer")
+        return reduce(lambda x, y: x * y, [self] * power)
+
     def __truediv__(self, other) -> Group:
         """Quotient group
 
@@ -94,10 +100,15 @@ class Group:
             if other.parent_group == self:
                 if not other.is_normal:
                     raise ValueError("the subgroup passed is not normal")
-                cosets = {Coset(self.identity, other)}.union(
-                    {Coset(g, other) for g in self.generators}
-                )
-                return Group(list(cosets))
+                augmented_generators = [
+                    a * b
+                    for a in self.generators
+                    for b in self.generators + [self.identity]
+                ]
+                generator_cosets = list({Coset(g, other) for g in augmented_generators})
+                identity_coset = Coset(self.identity, other)
+
+                return self.from_generators(generator_cosets, identity_coset)
             raise ValueError(
                 "the subgroup provided is not a subgroup of the provided parent group"
             )
@@ -132,6 +143,35 @@ class Group:
 
     def __len__(self) -> int:
         return len(self.elements)
+
+    @classmethod
+    def from_generators(
+        cls, generators: list[GroupElement], identity: GroupElement
+    ) -> Group:
+        """Builds a group from a given list of group elements and an identity element.
+
+        Args:
+            generators (list[GroupElement]): the generators of the group to be constructed
+            identity (GroupElement): the identity of the group to be constructed
+
+        Raises:
+            TypeError: this is raised if a list of group elements is not passed.
+
+        Returns:
+            Group: The group built from the generators provided.
+        """
+        if not isinstance(generators, list):
+            raise TypeError("the generators must be a list of group elements")
+        generated_elements = {identity}
+        length_i_words = {identity}
+
+        while length_i_words:
+            products = {f * s for f in length_i_words for s in generators}
+            products = products - generated_elements
+            length_i_words = products
+            generated_elements = generated_elements.union(length_i_words)
+
+        return cls(list(generated_elements))
 
     def is_trivial(self) -> bool:
         """Determines whether or not the group is trivial, i.e., if G = {1}.
