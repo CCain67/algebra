@@ -86,7 +86,7 @@ class SemidirectProductElement(GroupElement):
 
 
 def semidirect_product(
-    fiber: Group, twist: Callable[[GroupElement, GroupElement]], base: Group
+    fiber: Group, twist: Callable[[GroupElement, GroupElement], GroupElement], base: Group
 ) -> Group:
     """Constructs the semidirect product of two groups given a group action.
 
