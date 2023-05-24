@@ -171,7 +171,9 @@ class Group:
             length_i_words = products
             generated_elements = generated_elements.union(length_i_words)
 
-        return cls(list(generated_elements))
+        G = cls(list(generated_elements))
+        G.canonical_generators = generators
+        return G
 
     def is_trivial(self) -> bool:
         """Determines whether or not the group is trivial, i.e., if G = {1}.
@@ -550,7 +552,7 @@ class Coset(GroupElement):
         self.elements = [self.g * x for x in self.subgroup]
 
     def __repr__(self):
-        return "Coset(" + str(self.g) + ")"
+        return "Coset(\n" + str(self.g) + ")"
 
     def __eq__(self, other):
         return self.g * (~other.g) in self.subgroup

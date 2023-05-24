@@ -207,7 +207,7 @@ def Aut(
     return automorphism_group
 
 
-def Out(group: Group, relative_subgroup: Subgroup) -> Group:
+def Out(group: Group, relative_subgroup: Subgroup = None) -> Group:
     """
     Creates the group Out(G) of outer automorphisms of the finite group G.
 

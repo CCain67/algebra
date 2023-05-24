@@ -74,21 +74,18 @@ def alternating_group(N: int, representation: str = "permutation") -> Group:
     if representation not in ["permutation", "matrix"]:
         raise ValueError('repr must be one of: "permutation" or "matrix"')
 
-    all_permutations = list(itertools.permutations(range(1, N + 1)))
-    symmetric_group_elements = [
-        Permutation({i + 1: p[i] for i in range(N)}) for p in all_permutations
-    ]
-    alt_group = Group([P for P in symmetric_group_elements if P.sign == 1])
+    if N == 2:
+        canonical_generators = [Permutation({1: 2, 2: 1})]
+        identity = Permutation({1: 1, 2: 2})
 
     if N >= 3:
-        alt_group.canonical_generators = [
+        canonical_generators = [
             Permutation({1: 2, 2: K, K: 1, **{i: i for i in range(3, N + 1) if i != K}})
             for K in range(3, N + 1)
         ]
+        identity = Permutation({i: i for i in range(1, N + 1)})
 
     if representation == "matrix":
-        alt_group.elements = [P.to_matrix() for P in symmetric_group_elements]
-        alt_group.canonical_generators = [
-            P.to_matrix() for P in alt_group.canonical_generators
-        ]
-    return alt_group
+        canonical_generators = [P.to_matrix() for P in canonical_generators]
+        identity = identity.to_matrix()
+    return Group.from_generators(canonical_generators, identity)

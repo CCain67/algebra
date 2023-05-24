@@ -7,6 +7,7 @@ from functools import reduce
 import math
 import numpy
 import galois
+import quaternionic
 
 
 class GroupElement(ABC):
@@ -119,8 +120,8 @@ class CyclicGroupElement(GroupElement):
 
 class PolyhedralGroupElement(GroupElement):
     """Class representing elements of the general polyhedral groups. For now,
-    this includes dihedral, quasidihedral, and dicyclic/generalized quaternion
-    groups.
+    this includes dihedral, quasidihedral, dicyclic/generalized quaternion,
+    and modular maximal-cyclic groups.
 
     In each of these groups, there are two generators r and s, and all
     elements may be written as a product of the form r^ks^i for some exponent k,
@@ -144,6 +145,9 @@ class PolyhedralGroupElement(GroupElement):
         self.half_shift = None
         self.r_symb = "r"
         self.s_symb = "s"
+
+        # properties
+        self._order = None
 
     def __repr__(self) -> str:
         if self.is_identity():
@@ -199,6 +203,14 @@ class PolyhedralGroupElement(GroupElement):
             product = product * self
             count += 1
         return count
+
+    @property
+    def order(self):
+        """Fetches the order property"""
+        if self._order is None:
+            self._order = self.get_order()
+            return self._order
+        return self._order
 
     def is_identity(self) -> bool:
         return self.exponents == (0, 0)
@@ -257,7 +269,25 @@ class QuasidihedralGroupElement(PolyhedralGroupElement):
         super().__init__(exponents, n)
 
         self.modulus = 2 ** (n - 1)
-        self.shift = (self.modulus - 1) ** exponents[1]
+        self.shift = ((2 ** (n - 2)) - 1) ** exponents[1]
+        self.half_shift = 0
+
+
+class ModularMaximalCyclicGroupElement(PolyhedralGroupElement):
+    """Class representing elements of modular maximal-cyclic groups.
+
+    Args:
+        exponents (tuple[int]): a pair of exponents (k,i)
+        representing an element r^ks^i of the modular maximal-cyclic group.
+        n (int): the order of the generalized rotation r.
+    """
+
+    def __init__(self, exponents: tuple(int), n: int) -> None:
+        exponents = (exponents[0] % (2 ** (n - 1)), exponents[1])
+        super().__init__(exponents, n)
+
+        self.modulus = 2 ** (n - 1)
+        self.shift = ((2 ** (n - 2)) + 1) ** exponents[1]
         self.half_shift = 0
 
 
@@ -279,6 +309,69 @@ class DicyclicGroupElement(PolyhedralGroupElement):
         self.half_shift = 0
         self.r_symb = "a"
         self.s_symb = "x"
+
+
+class QuaternionElement(GroupElement):
+    """Class representing elements of the quaternion group.
+
+    Args:
+        quaternion (_type_): a quaternion array, as provided by the
+        package "quaternionic".
+    """
+
+    def __init__(self, quaternion: quaternionic.QuaternionicArray) -> None:
+        self.quaternion = quaternion
+        self.w = int(quaternion.w)
+        self.x = int(quaternion.x)
+        self.y = int(quaternion.y)
+        self.z = int(quaternion.z)
+        self.order = self.get_order()
+
+    def __eq__(self, other) -> bool:
+        return (self.quaternion == other.quaternion).all()
+
+    def __ne__(self, other) -> bool:
+        return (self.quaternion != other.quaternion).any()
+
+    def __hash__(self) -> int:
+        return hash((self.w, self.x, self.y, self.z))
+
+    def __repr__(self) -> str:
+        if self.w != 0:
+            return str(self.w)
+        if self.x != 0:
+            return str(self.x).replace("1", "") + "i"
+        if self.y != 0:
+            return str(self.y).replace("1", "") + "j"
+        return str(self.z).replace("1", "") + "k"
+
+    def __mul__(self, other) -> QuaternionElement:
+        return QuaternionElement(self.quaternion * other.quaternion)
+
+    def __neg__(self) -> QuaternionElement:
+        return QuaternionElement(-self.quaternion)
+
+    def __invert__(self) -> QuaternionElement:
+        if self.w == 0:
+            return -self
+        return self
+
+    def __pow__(self, power: int) -> QuaternionElement:
+        if power > 0:
+            return reduce(lambda x, y: x * y, [self] * power)
+        if power < 0:
+            return reduce(lambda x, y: x * y, [~self] * abs(power))
+        return QuaternionElement(quaternionic.array(1, 0, 0, 0))
+
+    def get_order(self) -> int:
+        if self.w != 0:
+            return 4
+        if self.w == -1:
+            return 2
+        return 1
+
+    def is_identity(self) -> bool:
+        return self.w == 1
 
 
 class Permutation(GroupElement):
