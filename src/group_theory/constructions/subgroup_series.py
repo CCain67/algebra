@@ -73,6 +73,8 @@ def is_solvable(group) -> bool:
     Returns:
         bool: True if the group is solvable, False otherwise.
     """
+    if group.order % 2 == 1:  # the is the Feit-Thompson Theorem
+        return True
     return derived_series(group)[-1].is_trivial()
 
 
