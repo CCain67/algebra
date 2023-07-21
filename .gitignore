@@ -1,7 +1,6 @@
 __pycache__
 _experiment_notebooks
 .pytest_cache
-.pylintrc
 .vscode
 .benchmarks
 *.ipynb
