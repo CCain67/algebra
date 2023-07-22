@@ -4,8 +4,8 @@ This module defines functions which compute centralizers and normalizers of subg
 from typing import (
     Iterable,
 )
-from group_theory.group_elements import GroupElement
-from group_theory.groups import (
+from ..group_elements import GroupElement
+from ..groups import (
     Group,
     Subgroup,
 )

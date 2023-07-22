@@ -1,8 +1,8 @@
 """This module defines functions for constructing finite abelian groups."""
 from functools import reduce
 
-from group_theory.groups import Group
-from group_theory.common_groups.cyclic_groups import cyclic_group
+from ..groups import Group
+from ..common_groups.cyclic_groups import cyclic_group
 
 
 def from_order_power_dict(order_power_dict: dict) -> Group:

@@ -14,7 +14,7 @@ from typing import (
 
 import galois
 
-from group_theory.group_elements import (
+from .group_elements import (
     CartesianProductElement,
     GroupElement,
 )

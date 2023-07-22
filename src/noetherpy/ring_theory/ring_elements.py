@@ -6,7 +6,7 @@ from functools import reduce
 
 import galois
 
-from group_theory.group_elements import GroupElement
+from ..group_theory.group_elements import GroupElement
 
 
 class RingElement(ABC):

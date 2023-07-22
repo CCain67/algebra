@@ -1,7 +1,7 @@
 """This module defines functions for constructing cyclic groups"""
 
-from group_theory.group_elements import CyclicGroupElement
-from group_theory.groups import Group
+from ..group_elements import CyclicGroupElement
+from ..groups import Group
 
 
 def cyclic_group(

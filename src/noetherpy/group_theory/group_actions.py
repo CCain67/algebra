@@ -7,10 +7,10 @@ from typing import (
     Type,
 )
 
-from group_theory.group_elements import (
+from .group_elements import (
     GroupElement,
 )
-from group_theory.groups import (
+from .groups import (
     Group,
     Subgroup,
 )

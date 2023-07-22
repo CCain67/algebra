@@ -3,15 +3,15 @@ the Klein 4 group, and dihedral groups."""
 
 import quaternionic
 
-from group_theory.group_elements import (
+from ..group_elements import (
     DicyclicGroupElement,
     DihedralGroupElement,
     ModularMaximalCyclicGroupElement,
     QuasidihedralGroupElement,
     QuaternionElement,
 )
-from group_theory.groups import Group
-from group_theory.common_groups.cyclic_groups import cyclic_group
+from ..groups import Group
+from ..common_groups.cyclic_groups import cyclic_group
 
 
 def klein_four_group(representation: str = "residue") -> Group:

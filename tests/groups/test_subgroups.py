@@ -1,11 +1,17 @@
 """Tests for properties of subgroups and subgroup constructions"""
-from group_theory.groups import Subgroup
+from noetherpy.group_theory.groups import Subgroup
 
-from group_theory.common_groups.permutation_groups import symmetric_group
-from group_theory.common_groups.misc_groups import dihedral_group
+from noetherpy.group_theory.common_groups.permutation_groups import symmetric_group
+from noetherpy.group_theory.common_groups.misc_groups import dihedral_group
 
-from group_theory.constructions.subgroup_constructions import centralizer, normalizer
-from group_theory.constructions.subgroup_series import is_solvable, is_nilpotent
+from noetherpy.group_theory.constructions.subgroup_constructions import (
+    centralizer,
+    normalizer,
+)
+from noetherpy.group_theory.constructions.subgroup_series import (
+    is_solvable,
+    is_nilpotent,
+)
 
 
 def test_center_dihedral():

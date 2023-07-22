@@ -2,10 +2,10 @@
 
 import itertools
 
-from group_theory.group_elements import (
+from ..group_elements import (
     Permutation,
 )
-from group_theory.groups import Group
+from ..groups import Group
 
 
 def symmetric_group(N: int, representation: str = "permutation") -> Group:

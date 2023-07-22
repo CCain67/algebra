@@ -3,7 +3,7 @@ This module defines functions which compute various subgroup series
 of a group.
 """
 
-from group_theory.groups import (
+from ..groups import (
     Group,
     Subgroup,
 )

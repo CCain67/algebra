@@ -1,12 +1,12 @@
 """Tests to check if constructed groups contain the correct number of elements."""
-from group_theory.common_groups.permutation_groups import symmetric_group
-from group_theory.common_groups.matrix_groups import (
+from noetherpy.group_theory.common_groups.permutation_groups import symmetric_group
+from noetherpy.group_theory.common_groups.matrix_groups import (
     GL,
     heisenberg_group,
     O,
-    SL
+    SL,
 )
-from group_theory.common_groups.misc_groups import (
+from noetherpy.group_theory.common_groups.misc_groups import (
     cyclic_group,
     dihedral_group,
 )

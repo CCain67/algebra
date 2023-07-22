@@ -8,12 +8,12 @@ from typing import Callable
 from itertools import product
 from copy import copy
 
-from group_theory.group_elements import GroupElement
-from group_theory.groups import (
+from ..group_elements import GroupElement
+from ..groups import (
     Group,
     Subgroup,
 )
-from group_theory.homomorphisms import Automorphism
+from ..homomorphisms import Automorphism
 
 
 def _aut_get_identity(group: Group) -> Automorphism:

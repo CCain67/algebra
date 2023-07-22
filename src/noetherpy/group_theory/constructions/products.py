@@ -8,11 +8,10 @@ This module defines several types of products that can be formed between two gro
 from itertools import product
 from typing import Callable
 
-from group_theory.groups import (
+from ..groups import (
     Group,
 )
-from group_theory.group_elements import GroupElement
-
+from ..group_elements import GroupElement
 
 class SemidirectProductElement(GroupElement):
     """

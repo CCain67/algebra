@@ -2,11 +2,11 @@
 
 from galois import factors
 
-from group_theory.groups import (
+from ..groups import (
     Group,
     Subgroup,
 )
-from group_theory.constructions.subgroup_constructions import (
+from ..constructions.subgroup_constructions import (
     centralizer,
     conjugate_subgroup,
     normalizer,

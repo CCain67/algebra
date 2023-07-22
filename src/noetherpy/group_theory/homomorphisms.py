@@ -8,11 +8,11 @@ from typing import Callable, Tuple, Union
 from functools import reduce
 from itertools import product
 
-from group_theory.group_elements import (
+from .group_elements import (
     CartesianProductElement,
     GroupElement,
 )
-from group_theory.groups import (
+from .groups import (
     Group,
     Subgroup,
 )

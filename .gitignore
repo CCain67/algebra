@@ -3,5 +3,8 @@ _experiment_notebooks
 .pytest_cache
 .vscode
 .benchmarks
+build/
+dist/
+*.egg-info
 *.ipynb
 TODO.md

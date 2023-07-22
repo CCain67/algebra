@@ -4,8 +4,8 @@ This module defines the Ring, Subring, and Ideal classes.
 
 from __future__ import annotations
 
-from group_theory.groups import Group
-from ring_theory.ring_elements import (
+from ..group_theory.groups import Group
+from .ring_elements import (
     GroupElementAdapter,
     RingElement,
 )

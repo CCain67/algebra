@@ -5,12 +5,12 @@ from itertools import (
     combinations_with_replacement,
 )
 from math import comb
-from group_theory.groups import Group
-from group_theory.constructions.subgroup_constructions import (
+from ..groups import Group
+from ..constructions.subgroup_constructions import (
     centralizer,
     normalizer,
 )
-from group_theory.constructions.subgroup_series import (
+from ..constructions.subgroup_series import (
     is_nilpotent,
     is_solvable,
 )

@@ -7,10 +7,10 @@ from functools import reduce
 import numpy as np
 import galois
 
-from group_theory.group_elements import (
+from ..group_elements import (
     Matrix,
 )
-from group_theory.groups import (
+from ..groups import (
     Group,
     LinearGroup,
     Subgroup,
