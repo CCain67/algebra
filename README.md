@@ -1,4 +1,4 @@
-# noether 
+# NoetherPy
 A small python library for computational abstract algebra designed to make it easy to learn, test conjectures and ideas in a python notebook. 
 
 ## Features
