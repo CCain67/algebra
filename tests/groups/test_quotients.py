@@ -1,8 +1,5 @@
-import pytest
-
-from group_theory.common_groups.permutation_groups import *
-from group_theory.common_groups.matrix_groups import *
-from group_theory.common_groups.misc_groups import *
+"""Tests to guarantee quotient groups are computed correctly."""
+from group_theory.common_groups.permutation_groups import symmetric_group
 
 
 def test_symmetric_quotient_alternating():

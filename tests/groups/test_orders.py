@@ -1,8 +1,11 @@
-import pytest
-import galois
-
+"""Tests to check if constructed groups contain the correct number of elements."""
 from group_theory.common_groups.permutation_groups import symmetric_group
-from group_theory.common_groups.matrix_groups import *
+from group_theory.common_groups.matrix_groups import (
+    GL,
+    heisenberg_group,
+    O,
+    SL
+)
 from group_theory.common_groups.misc_groups import (
     cyclic_group,
     dihedral_group,
@@ -39,8 +42,7 @@ def negative_one_is_square(q):
     if q % 2 == 0:
         # since -1=1 in a field of char=2, -1 is trivially a square
         return True
-    else:
-        return q % 4 == 1
+    return q % 4 == 1
 
 
 # currently only for characteristic != 2
@@ -56,17 +58,15 @@ def get_Onq_order(n, q):
             prod *= q ** (2 * k) - q ** (2 * i)
             i += 1
         return 2 * (q**k) * prod
-    else:
-        k = n / 2
-        i = 1
-        prod = 1
-        while i < k:
-            prod *= q ** (2 * k) - q ** (2 * i)
-            i += 1
-        if negative_one_is_square(q):
-            return 2 * (q**k - 1) * prod
-        else:
-            return 2 * (q**k + (-1) ** (k + 1)) * prod
+    k = n / 2
+    i = 1
+    prod = 1
+    while i < k:
+        prod *= q ** (2 * k) - q ** (2 * i)
+        i += 1
+    if negative_one_is_square(q):
+        return 2 * (q**k - 1) * prod
+    return 2 * (q**k + (-1) ** (k + 1)) * prod
 
 
 def test_GLnq_order():

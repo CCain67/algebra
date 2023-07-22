@@ -1,5 +1,4 @@
-import pytest
-
+"""Tests for group homomorphisms."""
 from group_theory.group_elements import GroupElement
 from group_theory.homomorphisms import Homomorphism
 from group_theory.common_groups.permutation_groups import symmetric_group

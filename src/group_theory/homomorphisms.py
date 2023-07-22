@@ -365,7 +365,7 @@ class Automorphism(Homomorphism, GroupElement):
             self._morphism_to_in_out_dict()
             in_out_dict = {g: self(other(g)) for g in other.domain.generators}
             return Automorphism.from_action_on_generators(
-                G=self.group, generator_in_out_dict=in_out_dict
+                domain=self.group, generator_in_out_dict=in_out_dict, codomain=self.group
             )
         self._morphism_to_in_out_dict()
         in_out_dict = {g: self(other(g)) for g in other.domain.generators}
@@ -378,10 +378,10 @@ class Automorphism(Homomorphism, GroupElement):
             return reduce(lambda x, y: x * y, [self] * N)
         if N < 0:
             return reduce(lambda x, y: x * y, [~self] * abs(N))
-        return Automorphism.from_dict(self.domain, {g: g for g in self.domain})
+        return Automorphism.from_dict(self.domain, {g: g for g in self.domain}, self.domain)
 
     def __invert__(self) -> Automorphism:
-        return Automorphism.from_dict(self.domain, {self(g): g for g in self.domain})
+        return Automorphism.from_dict(self.domain, {self(g): g for g in self.domain}, self.domain)
 
     def get_order(self) -> int:
         prod = self
@@ -398,56 +398,6 @@ class Automorphism(Homomorphism, GroupElement):
             self._order = self.get_order()
             return self._order
         return self._order
-
-    @classmethod
-    def from_action_on_generators(
-        cls, G: Group, generator_in_out_dict: dict
-    ) -> Automorphism:
-        """Creates an automorphism based on inputs and outputs of group generators.
-
-        Args:
-            G (Group): input group
-            generator_in_out_dict (dict): a dictionary of the form {input:output}
-
-        Raises:
-            ValueError: this error is raised if the generators do not form a subset
-            of the domain.
-
-        Returns:
-            Automorphism: an automorphism defined from the action on the generators
-        """
-        if not set(G.generators).issubset(set(generator_in_out_dict.keys())):
-            raise ValueError(
-                "the generators of the domain must be present in the dictionary keys"
-            )
-
-        generator_in_out_dict[G.identity] = G.identity
-        generator_representations = G.generator_representations
-        in_out_dict = {
-            g: reduce(
-                lambda x, y: x * y,
-                [generator_in_out_dict[x] for x in generator_representations[g]],
-            )
-            for g in G
-        }
-
-        return cls.from_dict(G=G, in_out_dict=in_out_dict)
-
-    @classmethod
-    def from_dict(cls, G: Group, in_out_dict: dict) -> Automorphism:
-        """Creates an automorphism from a input-output dictionary
-
-        Args:
-            input_group (Group): group of inputs and outputs
-            in_out_dict (dict): a dictionary of the form {input:output}
-
-        Returns:
-            Automorphism: an automorphism F which satisfies F(input) = in_out_dict[input].
-        """
-        pre_automorphism = _homomorphism_factory(in_out_dict=in_out_dict)
-        automorphism = cls(G, pre_automorphism)
-        automorphism.in_out_dict = in_out_dict
-        return automorphism
 
 
 class GroupHom:

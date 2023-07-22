@@ -95,7 +95,8 @@ def semidirect_product(
         - twist (Callable): the action of the base group on the fiber group
         - base (Group): the group which is performing the action.
 
-    Terminology: for a group G with action f:G x H -> H, we will refer to G as the "base" group and H as the "fiber" group, in an analogy to fiber bundles.
+    Terminology: for a group G with action f:G x H -> H, we will refer to G as the "base" group 
+        and H as the "fiber" group, in an analogy to fiber bundles.
 
     Returns:
         Group: the semidirect product of the two groups provided via the action provided.

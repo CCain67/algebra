@@ -275,8 +275,7 @@ class Group:
                 if z * h == h * z:
                     counter += 1
                     continue
-                else:
-                    break
+                break
             if counter == number_of_generators:
                 central_elements += [z]
         return Subgroup(central_elements, self)

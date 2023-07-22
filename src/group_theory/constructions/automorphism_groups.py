@@ -18,7 +18,7 @@ from group_theory.homomorphisms import Automorphism
 
 def _aut_get_identity(group: Group) -> Automorphism:
     identity_dict = {g: g for g in group}
-    eye = Automorphism.from_dict(G=group, in_out_dict=identity_dict)
+    eye = Automorphism.from_dict(domain=group, in_out_dict=identity_dict, codomain=group)
     eye.in_out_dict = identity_dict
     return eye
 
@@ -163,7 +163,7 @@ def Aut(
 
     for in_out_dict in potential_automorphisms:
         if in_out_dict in updated_potential_automorphisms:
-            automorphism = Automorphism.from_action_on_generators(group, in_out_dict)
+            automorphism = Automorphism.from_action_on_generators(group, in_out_dict, group)
 
             homomorphism_check = automorphism.validate_homomorphism()
             preserves_conjugacy_classes = _check_class_preserving(
