@@ -31,7 +31,7 @@ pip install .
 ```
 Now, inside of a Jupyter Notebook, the package can be imported:
 ```python
-In [1]: import noetherpy as ntr
+import noetherpy as ntr
 ```
 
 ### Showcase
