@@ -1,9 +1,4 @@
-black==23.7.0
-galois==0.3.5
-isort==5.12.0
-numpy==1.23.5
-pylint==2.17.4
-pytest==7.2.2
+galois>=0.3.5
+numpy>=1.23
 quaternionic==1.0.6
-radon==6.0.1
-scipy==1.11.1
+scipy>=1.11
