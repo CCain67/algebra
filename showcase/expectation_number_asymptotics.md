@@ -31,15 +31,16 @@ N = 500
 sum_asym = 0
 vals = []
 for i in range(2,N):
-    Z_k = ntr.cyclic_group(i)
-    exp_1_Z_k = ntr.expectation_number(
+    C_k = ntr.cyclic_group(i)
+    exp_1_C_k = ntr.expectation_number(
         k=1,
-        group=Z_k,
-        scale_by_order=True)
-    sum_asym += exp_1_Z_k
+        group=C_k,
+        scale_by_order=True,
+    )
+    sum_asym += exp_1_C_k
     vals.append(sum_asym/i)
 
-ser = pd.DataFrame(vals)
+ser = pd.Series(vals)
 
 sns.lineplot(data=ser)
 plt.show()
