@@ -261,7 +261,7 @@ def _tuple_to_matrix(
     dimension: int, GF: Type[galois.FieldArray], element_tuple: tuple
 ) -> galois.FieldArray:
     """
-    Creates an element of th Heisenberg group from a vector of finite field elements.
+    Creates an element of the Heisenberg group from a vector of finite field elements.
 
     Note: here, we need len(t)==tri(dimension)
     """

@@ -348,10 +348,14 @@ class Automorphism(Homomorphism, GroupElement):
     """Class representing an automorphism of a finite group."""
 
     def __init__(
-        self, group: Group, morphism: Callable[[Tuple[GroupElement, ...]], GroupElement]
+        self,
+        domain: Group,
+        morphism: Callable[[Tuple[GroupElement, ...]], GroupElement],
+        codomain: Group = None,
     ) -> None:
-        super().__init__(group, morphism, group)
-        self.group = group
+        codomain = domain
+        super().__init__(domain, morphism, codomain)
+        self.group = domain
 
         # properties
         self._order = None
@@ -365,7 +369,9 @@ class Automorphism(Homomorphism, GroupElement):
             self._morphism_to_in_out_dict()
             in_out_dict = {g: self(other(g)) for g in other.domain.generators}
             return Automorphism.from_action_on_generators(
-                domain=self.group, generator_in_out_dict=in_out_dict, codomain=self.group
+                domain=self.group,
+                generator_in_out_dict=in_out_dict,
+                codomain=self.group,
             )
         self._morphism_to_in_out_dict()
         in_out_dict = {g: self(other(g)) for g in other.domain.generators}
@@ -378,10 +384,14 @@ class Automorphism(Homomorphism, GroupElement):
             return reduce(lambda x, y: x * y, [self] * N)
         if N < 0:
             return reduce(lambda x, y: x * y, [~self] * abs(N))
-        return Automorphism.from_dict(self.domain, {g: g for g in self.domain}, self.domain)
+        return Automorphism.from_dict(
+            self.domain, {g: g for g in self.domain}, self.domain
+        )
 
     def __invert__(self) -> Automorphism:
-        return Automorphism.from_dict(self.domain, {self(g): g for g in self.domain}, self.domain)
+        return Automorphism.from_dict(
+            self.domain, {self(g): g for g in self.domain}, self.domain
+        )
 
     def get_order(self) -> int:
         prod = self

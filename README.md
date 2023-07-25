@@ -25,7 +25,7 @@ then, for now it is recommended to work in a python 3.11 virtual environment:
 ```
 conda create -n venv_name python=3.11
 ```
-and install the package by running the command in the project's root directory:
+and install the package by running the following command in the project's root directory:
 ```
 pip install .
 ```
