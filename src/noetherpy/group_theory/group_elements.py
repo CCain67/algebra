@@ -98,8 +98,9 @@ class CyclicGroupElement(GroupElement):
         Returns:
             Permutation: a permutation representation of the cyclic group element.
         """
-        generator = {i: i + 1 for i in range(1, self.generator_order)}
-        generator[self.generator_order] = 1
+        generator = Permutation(
+            [(i + 1) % self.generator_order for i in range(self.generator_order)]
+        )
         return generator**self.power
 
     def to_matrix(self) -> Matrix:
@@ -110,11 +111,12 @@ class CyclicGroupElement(GroupElement):
             Matrix: a permutation matrix representing the cyclic group element.
         """
         GF = galois.GF(2)
-        generator = {i: i + 1 for i in range(1, self.generator_order)}
-        generator[self.generator_order] = 1
+        generator = [
+            (i + 1) % self.generator_order for i in range(self.generator_order)
+        ]
         matrix_generator = GF.Zeros((self.generator_order, self.generator_order))
-        for k in generator.keys():
-            matrix_generator[k - 1, generator[k] - 1] = 1
+        for k in range(self.generator_order):
+            matrix_generator[k, generator[k]] = 1
         return Matrix(matrix_generator, 2, 1)
 
 
@@ -239,11 +241,8 @@ class DihedralGroupElement(PolyhedralGroupElement):
         Returns:
             Permutation: permutation representation of the dihedral group element.
         """
-        cycle = {**{i: i + 1 for i in range(1, self.n)}, self.n: 1}
-        flip = {1: 1, **{2 + i: self.n - i for i in range(self.n - 1)}}
-
-        r = Permutation(cycle)
-        s = Permutation(flip)
+        r = Permutation([(i + 1) % self.n for i in range(self.n)])
+        s = Permutation([1, 0] + list(range(2, self.n)))
         return (r ** self.exponents[0]) * (s ** self.exponents[1])
 
     def to_matrix(self) -> Matrix:
@@ -378,21 +377,22 @@ class Permutation(GroupElement):
     """Class representing an element of a permutation group.
 
     Args:
-        permutation (dict): a dictionary representation of the permutation.
+        permutation (list): a list representation of the permutation.
 
     Examples:
-        The permutation on the symbols 1,2,3,4,5 which sends:
+        The permutation on the symbols 0,1,2,3,4 which sends:
 
-        1 -> 2
+        0 -> 1
+        1 -> 4
         2 -> 3
-        3 -> 1
-        4 -> 5
-        5 -> 1
+        3 -> 2
+        4 -> 0
 
-        is represented by the dictionary {1:2, 2:3, 3:1, 4:5, 5:4}.
+        is represented by the list [1, 4, 3, 2, 0]. In general, if p is
+        a list representing a permutation, then p sends i to p[i].
     """
 
-    def __init__(self, permutation: dict):
+    def __init__(self, permutation: list):
         self.permutation = permutation
         self.num_letters = len(self.permutation)
 
@@ -410,7 +410,7 @@ class Permutation(GroupElement):
         return self.permutation[key]
 
     def __len__(self):
-        length = len({k: self[k] for k in self.permutation.keys() if k != self[k]})
+        length = len([i for i in range(self.num_letters) if i != self[i]])
         if length == 0:
             return 1
         return length
@@ -422,12 +422,12 @@ class Permutation(GroupElement):
         return not self.permutation == other.permutation
 
     def __hash__(self):
-        return hash(frozenset(self.permutation.items()))
+        return hash(tuple(self.permutation))
 
-    def __mul__(self, other):
-        composition = {
-            i: self.permutation[other.permutation[i]] for i in self.permutation
-        }
+    def __mul__(self, other: Permutation):
+        composition = [
+            self.permutation[other.permutation[i]] for i in range(other.num_letters)
+        ]
         return Permutation(composition)
 
     def __pow__(self, power: int):
@@ -435,43 +435,13 @@ class Permutation(GroupElement):
             return reduce(lambda x, y: x * y, [self] * power)
         if power < 0:
             return reduce(lambda x, y: x * y, [~self] * abs(power))
-        return Permutation({i: i for i in range(1, self.num_letters + 1)})
+        return Permutation(list(range(self.num_letters)))
 
     def __invert__(self):
-        inverse = {self.permutation[k]: k for k in self.permutation.keys()}
+        inverse = [0] * self.num_letters
+        for i in range(self.num_letters):
+            inverse[self[i]] = i
         return Permutation(inverse)
-
-    def find_cycle_dict(self, start: int) -> dict:
-        """iterates through the permutation beginning at the starting integer provided, and
-        returns the cycle which starts at the provided integer.
-
-        Args:
-            start (int): the starting symbol of the cycle
-
-        Returns:
-            dict: dictionary representing the cycle
-
-        Example:
-            Consider the permutation on the symbols 1,2,3,4,5 represented by the dictionary:
-
-            p = {1:2, 2:3, 3:1, 4:5, 5:4}.
-
-            If the starting point 1 is provided, then find_cycle_dict(1) returns:
-
-            {1:2, 2:3, 3:1}.
-
-            If the starting point 4 is provided, then find_cycle_dict(4) returns:
-
-            {4:5 ,5:4}.
-        """
-        current_key = start
-        cycle = {}
-        while self.permutation[current_key] != start:
-            cycle[current_key] = self.permutation[current_key]
-            current_key = self.permutation[current_key]
-        cycle[current_key] = self.permutation[current_key]
-
-        return cycle
 
     def get_cycle_notation(self) -> str:
         """Produces the cycle decomposition of the permutation as a string
@@ -480,57 +450,53 @@ class Permutation(GroupElement):
             str: string representing the cycle decomposition
 
         Example:
-            Consider the permutation on the symbols 1,2,3,4,5 represented by the dictionary:
+            Consider the permutation on the symbols 0,1,2,3,4 represented by the list:
 
-            p = {1:2, 2:3, 3:1, 4:5, 5:4}.
+            p = [1, 2, 0, 4, 3].
 
             then get_cycle_notation() returns:
 
-            (4 5)(1 2 3).
+            (3 4)(0 1 2).
         """
         if self.is_identity():
             return "1"
-        key_set = set(self.permutation.keys())
-        updated_key_set = key_set
-        cycle_list = []
-        while len(updated_key_set) > 0:
-            for k in key_set:
-                if k in updated_key_set:
-                    cycle = self.find_cycle_dict(start=k)
-                    if len(cycle) > 1:  # ignore cycles of the form (j)
-                        cycle_string = "(" + " ".join([str(i) for i in cycle]) + ")"
-                        cycle_list.append(cycle_string)
-                    updated_key_set = updated_key_set - set(cycle.keys())
-        return "".join(cycle_list[::-1])
+        cycle_notation = ""
+        for cycle in self.cycle_decomposition[::-1]:
+            if len(cycle) != 1:
+                cycle_notation += "(" + "".join(str(cycle).strip("[]").split(",")) + ")"
+        return cycle_notation
 
     def get_cycle_decomposition(self) -> list[Permutation]:
         """Produces the cycle decomposition of the permutation.
 
         Returns:
-            list: list of Permutations in the cycle decomposition
+            list: list of lists depicting the cycle decomposition
 
         Example:
-            Consider the permutation on the symbols 1,2,3,4,5 represented by the dictionary:
+            Consider the permutation on the symbols 0,1,2,3,4 represented by the dictionary:
 
-            p = {1:2, 2:3, 3:1, 4:5, 5:4}.
+            p = [1, 2, 0, 4, 3].
 
-            then get_cycle_decomposition() returns:
+            then get_cycle_notation() returns:
 
-            [Permutation({1:1, 2:2, 3:3, 4:5, 5:4}), Permutation({1:2, 2:3, 3:1, 4:4, 5:5})].
+            [[1,2,0],[3,4]].
         """
-        key_set = set(self.permutation.keys())
-        updated_key_set = key_set
-        cycle_list = []
-        while len(updated_key_set) > 0:
-            for k in key_set:
-                if k in updated_key_set:
-                    cycle = self.find_cycle_dict(start=k)
-                    updated_key_set = updated_key_set - set(cycle.keys())
-                    for i in set(self.permutation.keys()) - set(cycle.keys()):
-                        cycle[i] = i
-                    cycle_list.append(Permutation(cycle))
+        visited = [False] * self.num_letters
+        cycles = []
 
-        return cycle_list
+        for i in range(self.num_letters):
+            if visited[i]:
+                continue
+            cycle = []
+            j = i
+            while not visited[j]:
+                visited[j] = True
+                cycle.append(j)
+                j = self.permutation[j]
+            if len(cycle) != 1:
+                cycles.append(cycle)
+
+        return cycles
 
     def get_cycle_type(self) -> list[int]:
         """Produces the cycle type of the permutation.
@@ -539,15 +505,42 @@ class Permutation(GroupElement):
             list: list of integers
 
         Example:
-            Consider the permutation on the symbols 1,2,3,4,5 represented by the dictionary:
+            Consider the permutation on the symbols 0,1,2,3,4 represented by the dictionary:
 
-            p = {1:2, 2:3, 3:1, 4:5, 5:4}.
+            p = [1, 2, 0, 4, 3].
 
             then get_cycle_type() returns:
 
             [2, 3].
         """
         return sorted([len(p) for p in self.cycle_decomposition])
+
+    @classmethod
+    def from_cycle(cls, cycle: list, num_letters: int) -> Permutation:
+        """Produces a Permutation from a cycle list.
+
+        Args:
+            - cycle (list): a list representing a cycle.
+            - num_letters (int): the length of the resulting permutation.
+
+        Returns:
+            Permutation equal to the cycle given.
+
+        Example:
+            The list:
+                cycle = [1,4,3]
+            represents the cycle sending 1 to 4, 4 to 3, and 3 to 1. If
+            we set length to 5, then we get the Permutation:
+            0 -> 0
+            1 -> 4
+            2 -> 2
+            3 -> 1
+            4 -> 3
+        """
+        permutation_list = list(range(num_letters))
+        for i, x in enumerate(cycle):
+            permutation_list[x] = cycle[(i + 1) % len(cycle)]
+        return Permutation(permutation_list)
 
     @property
     def cycle_decomposition(self):
@@ -593,7 +586,12 @@ class Permutation(GroupElement):
     def sign(self):
         """Fetches the sign property"""
         if self._sign is None:
-            self._sign = numpy.linalg.det(self.to_matrix().matrix)
+            inversions = 0
+            for i, x in enumerate(self.permutation):
+                for j in range(i + 1, len(self.permutation)):
+                    if x > self.permutation[j]:
+                        inversions += 1
+            self._sign = -1 if inversions % 2 else 1
             return self._sign
         return self._sign
 
@@ -607,9 +605,7 @@ class Permutation(GroupElement):
         Returns:
             bool: True if the permutation is a transposition, False otherwise.
         """
-        return (
-            len([i for i in self.permutation.keys() if i != self.permutation[i]]) == 2
-        )
+        return len([i for i in self.permutation if i != self.permutation[i]]) == 2
 
     def is_cycle(self) -> bool:
         """Determines whether or not the permutation is a cycle.
@@ -630,7 +626,7 @@ class Permutation(GroupElement):
         Returns:
             bool: True if the permutation is the identity, False otherwise.
         """
-        return self.permutation == {i: i for i in self.permutation.keys()}
+        return self.permutation == list(range(self.num_letters))
 
     def to_matrix(self):
         """Converts the permutation into a matrix.
@@ -648,8 +644,8 @@ class Permutation(GroupElement):
         """
         shape = (self.num_letters, self.num_letters)
         matrix = numpy.zeros(shape)
-        for k in self.permutation.keys():
-            matrix[k - 1, self.permutation[k] - 1] = 1
+        for k in range(self.num_letters):
+            matrix[k, self.permutation[k]] = 1
         return Matrix(matrix, characteristic=2, degree=1)
 
 

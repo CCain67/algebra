@@ -30,24 +30,17 @@ def symmetric_group(N: int, representation: str = "permutation") -> Group:
     if representation not in ["permutation", "matrix"]:
         raise ValueError('repr must be one of: "permutation" or "matrix"')
 
-    all_permutations = list(itertools.permutations(range(1, N + 1)))
-    sym_group = Group(
-        [Permutation({i + 1: p[i] for i in range(N)}) for p in all_permutations]
-    )
+    all_permutations = [list(x) for x in itertools.permutations(range(N))]
+    sym_group = Group([Permutation(p) for p in all_permutations])
 
-    transposition = {1: 2, 2: 1}
-    for i in range(3, N + 1):
-        transposition[i] = i
-    cycle = {i: i + 1 for i in range(1, N)}
-    cycle[N] = 1
-    sym_group.canonical_generators = list(
-        {Permutation(cycle), Permutation(transposition)}
-    )
+    transposition = Permutation([1, 0] + list(range(2, N)))
+    cycle = Permutation([(i + 1) % N for i in range(N)])
+    sym_group.canonical_generators = [cycle, transposition]
 
     if representation == "matrix":
         sym_group.elements = [P.to_matrix() for P in sym_group.elements]
         sym_group.canonical_generators = list(
-            {Permutation(cycle).to_matrix(), Permutation(transposition).to_matrix()}
+            {cycle.to_matrix(), transposition.to_matrix()}
         )
     return sym_group
 
@@ -67,6 +60,8 @@ def alternating_group(N: int, representation: str = "permutation") -> Group:
     Returns:
         Group: the alternating group on N syumbols.
     """
+    identity = Permutation(list(range(N)))
+
     if N < 1:
         raise ValueError(
             "the alternating group on N letters requires N to be at least 1"
@@ -75,15 +70,13 @@ def alternating_group(N: int, representation: str = "permutation") -> Group:
         raise ValueError('repr must be one of: "permutation" or "matrix"')
 
     if N == 2:
-        canonical_generators = [Permutation({1: 2, 2: 1})]
-        identity = Permutation({1: 1, 2: 2})
+        canonical_generators = [Permutation([1, 0])]
 
     if N >= 3:
         canonical_generators = [
-            Permutation({1: 2, 2: K, K: 1, **{i: i for i in range(3, N + 1) if i != K}})
-            for K in range(3, N + 1)
+            Permutation([1, K] + list(range(2, K)) + [0] + list(range(K + 1, N)))
+            for K in range(2, N)
         ]
-        identity = Permutation({i: i for i in range(1, N + 1)})
 
     if representation == "matrix":
         canonical_generators = [P.to_matrix() for P in canonical_generators]
