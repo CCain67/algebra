@@ -354,6 +354,12 @@ class Group:
         """
         if not isinstance(generators, Iterable):
             raise TypeError("the generators must be an Iterable of group elements")
+
+        if len(generators) == 1 and generators[0].is_identity:
+            return Subgroup(generators, self)
+
+        largest_divisor_of_order = galois.divisors(self.order)[-2]
+
         generated_elements = {self.identity}
         length_i_words = {self.identity}
 
@@ -362,6 +368,8 @@ class Group:
             products = products - generated_elements
             length_i_words = products
             generated_elements = generated_elements.union(length_i_words)
+            if len(generated_elements) > largest_divisor_of_order:
+                return Subgroup(self.elements, self)
 
         return Subgroup(list(generated_elements), self)
 
@@ -558,7 +566,10 @@ class Coset(GroupElement):
 
     def __init__(self, g: GroupElement, subgroup: Subgroup) -> None:
         self.g, self.subgroup = self.validate_coset(g, subgroup)
-        self.elements = [self.g * x for x in self.subgroup]
+
+        # properties
+        self._elements = None
+        self._order = None
 
     def __repr__(self):
         return "Coset(\n" + str(self.g) + ")"
@@ -579,7 +590,7 @@ class Coset(GroupElement):
         return iter(self.elements)
 
     def __len__(self):
-        return len(self.elements)
+        return self.subgroup.order
 
     def __mul__(self, other):
         if self.subgroup != other.subgroup:
@@ -588,6 +599,16 @@ class Coset(GroupElement):
 
     def __invert__(self):
         return Coset(~self.g, self.subgroup)
+
+    def get_elements(self) -> list[GroupElement]:
+        return [self.g * x for x in self.subgroup]
+
+    @property
+    def elements(self) -> list[GroupElement]:
+        if self._elements is None:
+            self._elements = self.get_elements()
+            return self._elements
+        return self._elements
 
     @staticmethod
     def validate_coset(g: GroupElement, subgroup: Subgroup):
@@ -607,7 +628,22 @@ class Coset(GroupElement):
         return g, subgroup
 
     def get_order(self):
-        return NotImplemented
+        """Here, we locate the integer n such that g^n is in the subgroup H.
+        Then, (gH)^n = g^nH = H."""
+        count = 1
+        power = self.g
+        while power not in self.subgroup:
+            power = power * self.g
+            count += 1
+        return count
+
+    @property
+    def order(self):
+        """Fetches the order property"""
+        if self._order is None:
+            self._order = self.get_order()
+            return self._order
+        return self._order
 
     def is_identity(self):
         return self.g in self.subgroup

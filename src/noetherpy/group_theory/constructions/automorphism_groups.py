@@ -4,12 +4,11 @@ Inn(G), Aut(G), and Out(G)
 """
 
 from __future__ import annotations
-from typing import Callable
 from itertools import product
 from copy import copy
 
-from ..group_elements import GroupElement
 from ..groups import (
+    Coset,
     Group,
     Subgroup,
 )
@@ -23,13 +22,6 @@ def _aut_get_identity(group: Group) -> Automorphism:
     )
     eye.in_out_dict = identity_dict
     return eye
-
-
-def _inner_automorphism_factory(g: GroupElement) -> Callable:
-    def inner_auto(x: GroupElement) -> GroupElement:
-        return g * x * (~g)
-
-    return inner_auto
 
 
 def _check_preserves_subgroup(automorphism: Automorphism, subgroup: Subgroup) -> bool:
@@ -82,10 +74,10 @@ def _fetch_potential_automorphisms(group: Group) -> list:
 
 
 def _filter_potential_automorphisms(
-    automorphisms: list, potential_automorphisms: list, group: Group
+    automorphisms_to_remove: list, potential_automorphisms: list, group: Group
 ) -> list:
     in_out_dicts_to_remove = [
-        {g: inn(g) for g in group.generators} for inn in automorphisms
+        {g: inn(g) for g in group.generators} for inn in automorphisms_to_remove
     ]
     potential_automorphisms = [
         in_out_dict
@@ -110,7 +102,7 @@ def Inn(group: Group, relative_subgroup: Subgroup = None) -> Group:
     """Creates the group Inn(G) of inner automorphisms of the finite group G."""
     inner_automorphisms = list(
         {
-            Automorphism(group, _inner_automorphism_factory(g))
+            Automorphism.inner_auto_from_group_element(group, g)
             for g in [group.identity] + [x for x in group if x not in group.center]
         }
     )
@@ -122,6 +114,9 @@ def Inn(group: Group, relative_subgroup: Subgroup = None) -> Group:
         ]
     inner_automorphism_group = Group(inner_automorphisms)
     inner_automorphism_group.identity = _aut_get_identity(group)
+    inner_automorphism_group.canonical_generators = [
+        Automorphism.inner_auto_from_group_element(group, g) for g in group.generators
+    ]
     return inner_automorphism_group
 
 
@@ -155,13 +150,16 @@ def Aut(
     3. Once we are past this check, we call validate_homomorphism and check if the
     kernel is trivial. If this passes, we append the automorphism to the list.
     """
-    automorphisms = Inn(group, relative_subgroup).elements
+    inner_automorphisms = Inn(group, relative_subgroup).elements
 
     potential_automorphisms = _fetch_potential_automorphisms(group)
     potential_automorphisms = _filter_potential_automorphisms(
-        automorphisms, potential_automorphisms, group
+        automorphisms_to_remove=inner_automorphisms,
+        potential_automorphisms=potential_automorphisms,
+        group=group,
     )
     updated_potential_automorphisms = copy(potential_automorphisms)
+    automorphisms = set(inner_automorphisms)
 
     for in_out_dict in potential_automorphisms:
         if in_out_dict in updated_potential_automorphisms:
@@ -182,8 +180,9 @@ def Aut(
                     fixes_subgroup,
                 ]
             ):
-                automorphisms = list(
-                    {A * automorphism for A in automorphisms}.union(set(automorphisms))
+                automorphism.is_inner = False
+                automorphisms = {A * automorphism for A in automorphisms}.union(
+                    automorphisms
                 )
                 generator_images_to_remove = [
                     {g: A(g) for g in group.generators} for A in automorphisms
@@ -206,7 +205,7 @@ def Aut(
         else:
             continue
 
-    automorphism_group = Group(automorphisms)
+    automorphism_group = Group(list(automorphisms))
     automorphism_group.identity = _aut_get_identity(group)
     return automorphism_group
 
@@ -215,10 +214,27 @@ def Out(group: Group, relative_subgroup: Subgroup = None) -> Group:
     """
     Creates the group Out(G) of outer automorphisms of the finite group G.
 
-    Out(G) is defined as the quoteint group Aut(G)/Inn(G).
+    Out(G) is defined as the quotient group Aut(G)/Inn(G).
     """
     automorphism_group = Aut(group, relative_subgroup)
-    inner_automorphism_group = Inn(group, relative_subgroup)
-    return automorphism_group / Subgroup(
-        inner_automorphism_group.elements, automorphism_group
+    identity_map = automorphism_group.identity
+    inner_automorphism_group = Subgroup(
+        Inn(group, relative_subgroup).elements, automorphism_group
     )
+    full_outer_automorphism_list = [f for f in automorphism_group if not f.is_inner]
+    expected_size = automorphism_group.order / inner_automorphism_group.order
+
+    generator_list = [Coset(identity_map, inner_automorphism_group)]
+    outer_automorphism_group = Group.from_generators(
+        generator_list, Coset(identity_map, inner_automorphism_group)
+    )
+
+    for automorphism in full_outer_automorphism_list:
+        generator_list.append(Coset(automorphism, inner_automorphism_group))
+        outer_automorphism_group = Group.from_generators(
+            generator_list, Coset(identity_map, inner_automorphism_group)
+        )
+        if outer_automorphism_group.order == expected_size:
+            break
+
+    return outer_automorphism_group

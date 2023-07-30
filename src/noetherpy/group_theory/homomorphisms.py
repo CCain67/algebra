@@ -25,8 +25,15 @@ def _homomorphism_factory(in_out_dict: dict) -> Callable:
     return homomorphism
 
 
+def _inner_automorphism_factory(g: GroupElement) -> Callable:
+    def inner_auto(x: GroupElement) -> GroupElement:
+        return g * x * (~g)
+
+    return inner_auto
+
+
 class Homomorphism:
-    """Base class for homomorphisms between fininte groups.
+    """Base class for homomorphisms between finite groups.
 
     Args:
         - domain (Group): the group of inputs of the homomorphism
@@ -359,6 +366,7 @@ class Automorphism(Homomorphism, GroupElement):
 
         # properties
         self._order = None
+        self._is_inner = None
 
     def __mul__(self, other) -> Union[Homomorphism, Automorphism]:
         if not isinstance(other, Homomorphism):
@@ -393,6 +401,23 @@ class Automorphism(Homomorphism, GroupElement):
             self.domain, {self(g): g for g in self.domain}, self.domain
         )
 
+    @classmethod
+    def inner_auto_from_group_element(
+        cls, group: Group, g: GroupElement
+    ) -> Automorphism:
+        """Creates an inner automorphism from a group and an element of the group
+
+        Args:
+            - group (Group): The group the inner automorphism will be defined on
+            - g (GroupElement): The group element defining the inner automorphism
+
+        Returns:
+            The inner automorphism on (group) defined by conjugation by (g).
+        """
+        inner_auto = cls(group, _inner_automorphism_factory(g))
+        inner_auto.is_inner = True
+        return inner_auto
+
     def get_order(self) -> int:
         prod = self
         i = 1
@@ -408,6 +433,30 @@ class Automorphism(Homomorphism, GroupElement):
             self._order = self.get_order()
             return self._order
         return self._order
+
+    def check_if_inner(self) -> bool:
+        fixed_points = []
+        for g in self.group:
+            if self(g) == g and not g.is_identity():
+                fixed_points.append(g)
+
+        for x in fixed_points:
+            inner_auto = Automorphism.inner_auto_from_group_element(self.group, x)
+            if all((inner_auto(g) == self(g) for g in self.group.generators)):
+                return True
+        return False
+
+    @property
+    def is_inner(self) -> int:
+        """Fetches the is_inner property of the automorphism."""
+        if self._is_inner is None:
+            self._is_inner = self.check_if_inner()
+            return self._is_inner
+        return self._is_inner
+
+    @is_inner.setter
+    def is_inner(self, value):
+        self._is_inner = value
 
 
 class GroupHom:
