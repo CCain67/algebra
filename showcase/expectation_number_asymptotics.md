@@ -47,4 +47,54 @@ plt.show()
 ```
 ![Alt text](images/cyclic_group_exp_number_sum.png)
 
-Although the exact value of the sum above is known for cyclic groups, it is (to my knowledge) not known for other infinite families of groups, like dihedral groups, symmetric groups, etc. 
+Although the exact value of the sum above is known for cyclic groups, it is (to my knowledge) not known for other infinite families of groups, like dihedral groups, symmetric groups, etc. These values can be approximated with `noetherpy`:
+
+```python
+N = 500
+sum_asym = 0
+vals = []
+for i in range(2,N):
+    G = ntr.dihedral_group(i)
+    exp_1_G = ntr.expectation_number(
+        k=1,
+        group=G,
+        scale_by_order=True,
+    )
+    sum_asym += exp_1_G
+    vals.append(sum_asym/G.order)
+
+ser = pd.Series(vals)
+
+sns.lineplot(data=ser)
+plt.show()
+```
+![Alt text](images/dihedral_group_exp_number_sum.png)
+
+For dihedral groups, we appear to have:
+$$\sum_{n = 1}^{\infty}\frac{E_1(D_n)}{2n} \approx 0.0941.$$
+
+```python
+N = 500
+sum_asym = 0
+vals = []
+for i in range(2,N):
+    G = ntr.dicyclic_group(i)
+    exp_1_G = ntr.expectation_number(
+        k=1,
+        group=G,
+        scale_by_order=True,
+    )
+    sum_asym += exp_1_G
+    vals.append(sum_asym/G.order)
+
+ser = pd.Series(vals)
+
+sns.lineplot(data=ser)
+plt.show()
+```
+![Alt text](images/dicyclic_group_exp_number_sum.png)
+
+For dicyclic groups, we appear to have:
+$$\sum_{n = 1}^{\infty}\frac{E_1(\mathrm{Dic}_n)}{4n} \approx 0.0387.$$
+
+Asymptotics like this can be explored for other groups, and other statistical invariants of groups.

@@ -355,7 +355,7 @@ class Group:
         if not isinstance(generators, Iterable):
             raise TypeError("the generators must be an Iterable of group elements")
 
-        if len(generators) == 1 and generators[0].is_identity:
+        if len(generators) == 1 and generators[0].is_identity():
             return Subgroup(generators, self)
 
         largest_divisor_of_order = galois.divisors(self.order)[-2]
