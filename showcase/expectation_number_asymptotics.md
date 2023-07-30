@@ -20,7 +20,7 @@ which is available as `ntr.expectation_number(k,G)`. Additionally, we may also w
 
 These scaled expectation numbers have interesting asymptotic properties. For example, letting $C_n$ denote the cyclic group of order $n$, we have:
 $$\sum_{k = 1}^{\infty}\frac{E_1(C_k)}{k} = \frac{\zeta(3)}{\zeta(2)}\approx 0.7307,$$
-where $\zeta$ is the Riemann-Zeta function. This result is saying that if we randomly uniformly select am element from a cyclic group, then we can expect it to generate about 73% of the group. We can easily verify this numerically with `noetherpy`:
+where $\zeta$ is the Riemann-Zeta function. This result is saying that if we randomly uniformly select an element from a cyclic group, then we can expect it to generate about 73% of the group. We can easily verify this numerically with `noetherpy`:
 
 ```python
 import noetherpy as ntr
