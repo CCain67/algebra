@@ -66,7 +66,7 @@ class Group:
             repr_string += repr(group_element) + "\n"
         return repr_string
 
-    def __mul__(self, other) -> Group:
+    def __mul__(self, other: Group) -> Group:
         """This is the standard cartesian product of groups: for group G and H, G*H contains all
         pairs of elements of the form (g,h)
 
@@ -79,7 +79,16 @@ class Group:
         product_elements = list(
             CartesianProductElement(g) for g in product(self.elements, other.elements)
         )
-        return Group(product_elements)
+        cartesian_product = Group(product_elements)
+        if self.canonical_generators and other.canonical_generators:
+            cartesian_product.canonical_generators = [
+                CartesianProductElement((g, other.identity))
+                for g in self.canonical_generators
+            ] + [
+                CartesianProductElement((self.identity, h))
+                for h in other.canonical_generators
+            ]
+        return cartesian_product
 
     def __pow__(self, power: int):
         if power <= 0:
