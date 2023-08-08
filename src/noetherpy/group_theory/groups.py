@@ -172,7 +172,7 @@ class Group:
             products = {f * s for f in length_i_words for s in generators}
             products = products - generated_elements
             length_i_words = products
-            generated_elements = generated_elements.union(length_i_words)
+            generated_elements.update(length_i_words)
 
         G = cls(list(generated_elements))
         G.canonical_generators = generators
@@ -367,7 +367,7 @@ class Group:
             products = {f * s for f in length_i_words for s in generators}
             products = products - generated_elements
             length_i_words = products
-            generated_elements = generated_elements.union(length_i_words)
+            generated_elements.update(length_i_words)
             if len(generated_elements) > largest_divisor_of_order:
                 return Subgroup(self.elements, self)
 
@@ -399,7 +399,7 @@ class Group:
                         generator_dict[x] = generator_dict[word] + [generator]
             products = products - generated_elements
             length_i_words = products
-            generated_elements = generated_elements.union(length_i_words)
+            generated_elements.update(length_i_words)
 
         return generator_dict
 

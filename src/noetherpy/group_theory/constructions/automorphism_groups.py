@@ -181,9 +181,7 @@ def Aut(
                 ]
             ):
                 automorphism.is_inner = False
-                automorphisms = {A * automorphism for A in automorphisms}.union(
-                    automorphisms
-                )
+                automorphisms.update({A * automorphism for A in automorphisms})
                 generator_images_to_remove = [
                     {g: A(g) for g in group.generators} for A in automorphisms
                 ]

@@ -91,6 +91,6 @@ def fetch_all_sylow_p_subgroups(group: Group, p: int) -> list:
     sylow_centralizer = centralizer(sylow_p, group)
     sylow_p_subgroups = set()
     for g in (x for x in group if x not in sylow_centralizer):
-        sylow_p_subgroups = sylow_p_subgroups.union({conjugate_subgroup(sylow_p, g)})
+        sylow_p_subgroups.update({conjugate_subgroup(sylow_p, g)})
 
     return list(sylow_p_subgroups)
