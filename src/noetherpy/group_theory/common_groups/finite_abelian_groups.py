@@ -5,7 +5,7 @@ from ..groups import Group
 from ..common_groups.cyclic_groups import cyclic_group
 
 
-def from_order_power_dict(order_power_dict: dict) -> Group:
+def finite_abelian_group_from_order_power_dict(order_power_dict: dict) -> Group:
     """Constructs a finite abelian group from an order_power_dict.
 
     Args:
