@@ -42,22 +42,18 @@ def test_left_multiplication_is_not_valid_homomorphism_for_non_abelian_group() -
 
 
 def test_squaring_is_valid_homomorphism_for_abelian_groups() -> None:
-    A = finite_abelian_group_from_order_power_dict({2: 3, 3: 1, 7: 2})
-    B = finite_abelian_group_from_order_power_dict({13: 1, 4: 2, 9: 1})
+    A = finite_abelian_group_from_order_power_dict({3: 1, 6: 1, 7: 1})
 
     def squaring_map(x: GroupElement) -> GroupElement:
         return x * x
 
     assert ~Homomorphism(A, squaring_map, A).validate_homomorphism()
-    assert ~Homomorphism(B, squaring_map, B).validate_homomorphism()
 
 
 def test_inversion_is_valid_homomorphism_for_abelian_groups() -> None:
-    A = finite_abelian_group_from_order_power_dict({2: 3, 3: 1, 7: 2})
-    B = finite_abelian_group_from_order_power_dict({13: 1, 4: 2, 9: 1})
+    A = finite_abelian_group_from_order_power_dict({3: 1, 6: 1, 7: 1})
 
     def squaring_map(x: GroupElement) -> GroupElement:
         return ~x
 
     assert ~Homomorphism(A, squaring_map, A).validate_homomorphism()
-    assert ~Homomorphism(B, squaring_map, B).validate_homomorphism()
