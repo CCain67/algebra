@@ -35,7 +35,7 @@ class GroupElement(ABC):
 class CyclicGroupElement(GroupElement):
     """Base class representing elements of cyclic groups."""
 
-    def __init__(self, symbol: str, generator_order: int, power: int) -> None:
+    def __init__(self, generator_order: int, power: int, symbol: str = "a") -> None:
         self.symbol = symbol
         self.generator_order = generator_order
         self.power = power % generator_order
@@ -52,7 +52,6 @@ class CyclicGroupElement(GroupElement):
     def __eq__(self, other: CyclicGroupElement) -> bool:
         return all(
             (
-                self.symbol == other.symbol,
                 self.generator_order == other.generator_order,
                 self.power == other.power,
             )
@@ -61,7 +60,6 @@ class CyclicGroupElement(GroupElement):
     def __ne__(self, other: CyclicGroupElement) -> bool:
         return any(
             (
-                self.symbol != other.symbol,
                 self.generator_order != other.generator_order,
                 self.power != other.power,
             )
@@ -73,7 +71,7 @@ class CyclicGroupElement(GroupElement):
                 "the CyclicGroupElements must be elements of the same group for multiplication"
             )
         return CyclicGroupElement(
-            self.symbol, self.generator_order, self.power + other.power
+            self.generator_order, self.power + other.power, self.symbol
         )
 
     def __pow__(self, power: int):
@@ -81,10 +79,10 @@ class CyclicGroupElement(GroupElement):
             return reduce(lambda x, y: x * y, [self] * power)
         if power < 0:
             return reduce(lambda x, y: x * y, [~self] * abs(power))
-        return CyclicGroupElement(self.symbol, self.generator_order, 0)
+        return CyclicGroupElement(self.generator_order, 0, self.symbol)
 
     def __invert__(self):
-        return CyclicGroupElement(self.symbol, self.generator_order, -1 * self.power)
+        return CyclicGroupElement(self.generator_order, -1 * self.power, self.symbol)
 
     def get_order(self):
         return int(self.generator_order / galois.gcd(self.power, self.generator_order))

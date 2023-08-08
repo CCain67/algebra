@@ -26,7 +26,7 @@ def cyclic_group(
             'representation must be one of: "symbolic", "permutation", or "matrix"'
         )
 
-    g = CyclicGroupElement(generator_symbol, N, 1)
+    g = CyclicGroupElement(N, 1, generator_symbol)
     if representation == "permutation":
         g = g.to_permutation()
     elif representation == "matrix":
