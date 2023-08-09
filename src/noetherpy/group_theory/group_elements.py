@@ -108,14 +108,7 @@ class CyclicGroupElement(GroupElement):
         Returns:
             Matrix: a permutation matrix representing the cyclic group element.
         """
-        GF = galois.GF(2)
-        generator = [
-            (i + 1) % self.generator_order for i in range(self.generator_order)
-        ]
-        matrix_generator = GF.Zeros((self.generator_order, self.generator_order))
-        for k in range(self.generator_order):
-            matrix_generator[k, generator[k]] = 1
-        return Matrix(matrix_generator, 2, 1)
+        return self.to_permutation().to_matrix()
 
 
 class PolyhedralGroupElement(GroupElement):
@@ -640,15 +633,16 @@ class Permutation(GroupElement):
         Returns:
             Matrix: the permutation matrix associated to the permutation.
         """
+        GF = galois.GF(2)
         shape = (self.num_letters, self.num_letters)
-        matrix = numpy.zeros(shape)
+        matrix = GF.Zeros(shape)
         for k in range(self.num_letters):
             matrix[k, self.permutation[k]] = 1
         return Matrix(matrix, characteristic=2, degree=1)
 
 
 class Matrix(GroupElement):
-    """Class representing matrices over finite fields.
+    """Class representing matrices over finite fields. Wrapper for a galois.FieldArray
 
     Args:
         - matrix (galois.FieldArray): a square matrix (FieldArray) from the galois package

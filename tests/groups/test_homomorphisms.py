@@ -91,10 +91,10 @@ def rotations_to_kernel(x):
 rtk = Homomorphism(D, rotations_to_kernel, C)
 
 
-def test_kernel_is_normal_subgroup():
+def test_kernel_is_normal_subgroup() -> None:
     assert rtk.validate_homomorphism()
     assert rtk.kernel.is_normal
 
 
-def test_image_is_subgroup():
+def test_image_is_subgroup() -> None:
     assert rtk.image == C.subgroup_generated_by([CyclicGroupElement(8, 4)])

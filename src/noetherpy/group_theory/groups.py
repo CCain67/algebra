@@ -459,7 +459,7 @@ class Subgroup(Group):
             bool: returns True if the subgroup is a subset of the parent group,
             False otherwise.
         """
-        return set(self.elements).issubset(self.parent_group.elements)
+        return set(self.elements).issubset(set(self.parent_group.elements))
 
     # IMPORTANT - until this is called and returns true,
     # the Subgroup instance may not actually be a subgroup
