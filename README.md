@@ -1,8 +1,10 @@
 # NoetherPy
-[![test](https://github.com/CCain67/noetherpy/actions/workflows/test.yml/badge.svg)](https://github.com/CCain67/noetherpy/actions/workflows/test.yml)
-[![pylint](https://github.com/CCain67/noetherpy/actions/workflows/pylint.yml/badge.svg)](https://github.com/CCain67/noetherpy/actions/workflows/pylint.yml)
+A python library for computational abstract algebra designed to make it easy to learn, test conjectures and ideas in a python notebook. 
 
-A small python library for computational abstract algebra designed to make it easy to learn, test conjectures and ideas in a python notebook. 
+<div align=center>
+  <a href="https://github.com/CCain67/noetherpy/actions/workflows/test.yml"><img src="https://github.com/CCain67/noetherpy/actions/workflows/test.yml/badge.svg"></a>
+  <a href="https://github.com/CCain67/noetherpy/actions/workflows/pylint.yml"><img src="https://github.com/CCain67/noetherpy/actions/workflows/pylint.yml/badge.svg"></a>
+</div>
 
 ## Features
 Most of basic (finite) group theory has been implemented: 
