@@ -30,7 +30,7 @@ dev = [
     "black >= 22.8.0",
     "pylint >= 2.14",
     "pytest",
-    "coverage",
+    "pytest-cov",
     "radon>=6.0",
 ]
 
