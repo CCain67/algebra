@@ -1,7 +1,9 @@
 """Unit tests for Group, Subgroup, and Coset classes"""
 
-from noetherpy.group_theory.group_elements import GroupElement
+from noetherpy.group_theory.group_elements import GroupElement, Permutation
 from noetherpy.group_theory.groups import Coset, Group, Subgroup
+
+from noetherpy.group_theory.common_groups.permutation_groups import symmetric_group
 
 
 def test_trivial_group_properties() -> None:
@@ -47,3 +49,14 @@ def test_trivial_group_properties() -> None:
     # properties of operations
     assert (trivial_group * trivial_group).is_trivial()
     assert (trivial_group / trivial_subgroup).is_trivial()
+
+
+def test_cosets_should_partition_the_group() -> None:
+    G = symmetric_group(3)
+    H = G.subgroup_generated_by([Permutation([1, 0, 2])])
+    cosets = G % H
+
+    assert not H.is_normal
+    assert len(cosets) == G.order / H.order
+    assert set.intersection(*[set(X.elements) for X in cosets]) == set()
+    assert set.union(*[set(X.elements) for X in cosets]) == set(G.elements)

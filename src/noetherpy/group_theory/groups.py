@@ -111,7 +111,7 @@ class Group:
         if isinstance(other, Subgroup):
             if other.parent_group == self:
                 if not other.is_normal:
-                    raise ValueError("the subgroup passed is not normal")
+                    return {Coset(g, other) for g in self}
                 augmented_generators = [
                     a * b
                     for a in self.generators
@@ -121,6 +121,23 @@ class Group:
                 identity_coset = Coset(self.identity, other)
 
                 return self.from_generators(generator_cosets, identity_coset)
+            raise ValueError(
+                "the subgroup provided is not a subgroup of the provided parent group"
+            )
+        raise TypeError("you must pass a valid subgroup to quotient by")
+
+    def __mod__(self, other: Subgroup) -> set:
+        """Set of cosets of a subgroup
+
+        Args:
+            other (Subgroup): a normal subgroup of G(self)
+
+        Returns:
+            Set: the set of cosets of the subgroup
+        """
+        if isinstance(other, Subgroup):
+            if other.parent_group == self:
+                return {Coset(g, other) for g in self}
             raise ValueError(
                 "the subgroup provided is not a subgroup of the provided parent group"
             )
@@ -575,19 +592,19 @@ class Coset(GroupElement):
 
     def __init__(self, g: GroupElement, subgroup: Subgroup) -> None:
         self.g, self.subgroup = self.validate_coset(g, subgroup)
+        self.elements = [self.g * x for x in self.subgroup]
 
         # properties
-        self._elements = None
         self._order = None
 
     def __repr__(self):
         return "Coset(\n" + str(self.g) + ")"
 
     def __eq__(self, other):
-        return self.g * (~other.g) in self.subgroup
+        return (~self.g) * other.g in self.subgroup
 
     def __ne__(self, other):
-        return self.g * (~other.g) not in self.subgroup
+        return (~self.g) * other.g not in self.subgroup
 
     def __hash__(self):
         return hash(frozenset(self.elements))
@@ -608,16 +625,6 @@ class Coset(GroupElement):
 
     def __invert__(self):
         return Coset(~self.g, self.subgroup)
-
-    def get_elements(self) -> list[GroupElement]:
-        return [self.g * x for x in self.subgroup]
-
-    @property
-    def elements(self) -> list[GroupElement]:
-        if self._elements is None:
-            self._elements = self.get_elements()
-            return self._elements
-        return self._elements
 
     @staticmethod
     def validate_coset(g: GroupElement, subgroup: Subgroup):

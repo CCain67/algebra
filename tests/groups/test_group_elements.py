@@ -101,6 +101,14 @@ def test_permutation_sign() -> None:
     assert t.sign == -1
 
 
+def test_permutation_inverses() -> None:
+    assert (~p * p).is_identity() is True and (p * ~p).is_identity() is True
+    assert (~q * q).is_identity() is True and (q * ~q).is_identity() is True
+    assert (~r * r).is_identity() is True and (r * ~r).is_identity() is True
+    assert (~s * s).is_identity() is True and (s * ~s).is_identity() is True
+    assert (~t * t).is_identity() is True and (t * ~t).is_identity() is True
+
+
 def test_permutation_is_cycle() -> None:
     assert p.is_identity() is False
     assert q.is_identity() is False
