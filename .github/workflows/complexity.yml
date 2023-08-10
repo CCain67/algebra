@@ -24,4 +24,4 @@ jobs:
         pip install .[dev]
     - name: Evaluate complexity with radon
       run: |
-        radon cc . -nc
+        radon cc -a . && radon cc -nc . 
