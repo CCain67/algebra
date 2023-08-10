@@ -9,3 +9,4 @@ dist/
 *.ipynb
 *.txt
 TODO.md
+.coverage
