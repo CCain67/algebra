@@ -24,5 +24,6 @@ jobs:
         pip install .[dev]
     - name: Evaluate test coverage
       run: |
-        coverage json -o tests/coverage.json
         coverage report -m
+        coverage json -o tests/coverage.json
+        
