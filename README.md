@@ -1,10 +1,13 @@
 # NoetherPy
+[![test](https://github.com/CCain67/noetherpy/actions/workflows/test.yml/badge.svg)](https://github.com/CCain67/noetherpy/actions/workflows/test.yml)
+[![pylint](https://github.com/CCain67/noetherpy/actions/workflows/pylint.yml/badge.svg)](https://github.com/CCain67/noetherpy/actions/workflows/pylint.yml)
+
 A small python library for computational abstract algebra designed to make it easy to learn, test conjectures and ideas in a python notebook. 
 
 ## Features
 Most of basic (finite) group theory has been implemented: 
 - Simple and intuitive ways to define groups, subgroups, homomorphisms, etc. 
-- Symmetric/alternating groups, matrix groups over finite fields, cyclic groups and groups of units of (implemented) rings, finite abelioan groups, dihedral groups, quasidihedral groups, and the Klein 4 group are all implemented.
+- Symmetric/alternating groups, matrix groups over finite fields, cyclic groups and groups of units of (implemented) rings, finite abelian groups, dihedral groups, quasidihedral groups, and the Klein 4 group are all implemented.
   - Many of the above groups can be instantiated as matrix groups, or permutation groups.
 - Most well-known operations on groups/subgroups are supported:
   - Cartesian products, quotient groups, and semidirect products
