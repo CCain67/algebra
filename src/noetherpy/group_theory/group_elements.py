@@ -676,7 +676,7 @@ class Matrix(GroupElement):
         return (self.matrix == other.matrix).all()
 
     def __ne__(self, other):
-        return (self.matrix != other.matrix).all()
+        return (self.matrix != other.matrix).any()
 
     def __hash__(self) -> int:
         return hash((self.matrix.tostring(), self.characteristic, self.degree))
@@ -692,7 +692,9 @@ class Matrix(GroupElement):
             return reduce(lambda x, y: x * y, [self] * power)
         if power < 0:
             return reduce(lambda x, y: x * y, [~self] * abs(power))
-        return Matrix(numpy.eye(self.dimension), self.characteristic, self.degree)
+        return Matrix(
+            self.matrix.Identity(self.dimension), self.characteristic, self.degree
+        )
 
     def get_order(self):
         matrix_product = self
@@ -714,10 +716,7 @@ class Matrix(GroupElement):
         return self._order
 
     def is_identity(self):
-        return (
-            self.matrix
-            == galois.GF(self.characteristic, self.degree).Identity(self.dimension)
-        ).all()
+        return (self.matrix == self.matrix.Identity(self.dimension)).all()
 
 
 class CartesianProductElement(GroupElement):

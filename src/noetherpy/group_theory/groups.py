@@ -294,15 +294,8 @@ class Group:
             Subgroup: the center of the group.
         """
         central_elements = [self.identity]
-        number_of_generators = len(self.generators)
         for z in [x for x in self if x != self.identity]:
-            counter = 0
-            for h in self.generators:
-                if z * h == h * z:
-                    counter += 1
-                    continue
-                break
-            if counter == number_of_generators:
+            if all(z * h == h * z for h in self.generators):
                 central_elements += [z]
         return Subgroup(central_elements, self)
 

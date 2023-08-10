@@ -25,6 +25,8 @@ def cyclic_group(
         raise ValueError(
             'representation must be one of: "symbolic", "permutation", or "matrix"'
         )
+    if N < 1:
+        raise ValueError("the order must be at least 1")
 
     g = CyclicGroupElement(N, 1, generator_symbol)
     if representation == "permutation":
