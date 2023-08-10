@@ -1,7 +1,7 @@
 """Unit tests for Group, Subgroup, and Coset classes"""
 
 from noetherpy.group_theory.group_elements import GroupElement, Permutation
-from noetherpy.group_theory.groups import Coset, Group, Subgroup
+from noetherpy.group_theory.groups import Group, Subgroup
 
 from noetherpy.group_theory.common_groups.permutation_groups import symmetric_group
 

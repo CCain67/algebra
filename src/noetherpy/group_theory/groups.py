@@ -111,7 +111,7 @@ class Group:
         if isinstance(other, Subgroup):
             if other.parent_group == self:
                 if not other.is_normal:
-                    return {Coset(g, other) for g in self}
+                    raise ValueError("the subgroup passed is not normal")
                 augmented_generators = [
                     a * b
                     for a in self.generators
