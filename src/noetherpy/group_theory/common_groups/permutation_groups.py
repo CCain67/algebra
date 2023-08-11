@@ -21,14 +21,12 @@ def symmetric_group(N: int, representation: str = "permutation") -> Group:
         ValueError: Raised if a bad representation option is passed.
 
     Returns:
-        Group: the symmetric group on N syumbols.
+        Group: the symmetric group on N symbols.
     """
     if N < 1:
-        raise ValueError(
-            "the symmetricing group on N letters requires N to be at least 1"
-        )
+        raise ValueError("the symmetric group on N letters requires N to be at least 1")
     if representation not in ["permutation", "matrix"]:
-        raise ValueError('repr must be one of: "permutation" or "matrix"')
+        raise ValueError('representation must be one of: "permutation" or "matrix"')
 
     all_permutations = [list(x) for x in itertools.permutations(range(N))]
     sym_group = Group([Permutation(p) for p in all_permutations])
@@ -42,6 +40,7 @@ def symmetric_group(N: int, representation: str = "permutation") -> Group:
         sym_group.canonical_generators = list(
             {cycle.to_matrix(), transposition.to_matrix()}
         )
+        sym_group.identity = sym_group.identity.to_matrix()
     return sym_group
 
 
@@ -58,7 +57,7 @@ def alternating_group(N: int, representation: str = "permutation") -> Group:
         ValueError: Raised if a bad representation option is passed.
 
     Returns:
-        Group: the alternating group on N syumbols.
+        Group: the alternating group on N symbols.
     """
     identity = Permutation(list(range(N)))
 
@@ -67,10 +66,10 @@ def alternating_group(N: int, representation: str = "permutation") -> Group:
             "the alternating group on N letters requires N to be at least 1"
         )
     if representation not in ["permutation", "matrix"]:
-        raise ValueError('repr must be one of: "permutation" or "matrix"')
+        raise ValueError('representation must be one of: "permutation" or "matrix"')
 
     if N == 2:
-        canonical_generators = [Permutation([1, 0])]
+        canonical_generators = [Permutation([0, 1])]
 
     if N >= 3:
         canonical_generators = [
