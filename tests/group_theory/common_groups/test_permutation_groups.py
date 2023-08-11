@@ -106,18 +106,21 @@ def test_alternating_group_conjugacy_classes() -> None:
     assert len(alt_4_matrix.conjugacy_classes) == 4
 
 
-def test_alternating_group_is_subgroup_of_symmetric_group() -> None:
+def test_alternating_group_inclusion_into_symmetric_group() -> None:
     assert alt_2.validate_inclusion()
-    assert alt_2.validate_subgroup()
     assert alt_2_matrix.validate_inclusion()
-    assert alt_2_matrix.validate_subgroup()
     assert alt_3.validate_inclusion()
-    assert alt_3.validate_subgroup()
     assert alt_3_matrix.validate_inclusion()
-    assert alt_3_matrix.validate_subgroup()
     assert alt_4.validate_inclusion()
-    assert alt_4.validate_subgroup()
     assert alt_4_matrix.validate_inclusion()
+
+
+def test_alternating_group_is_subgroup_of_symmetric_group() -> None:
+    assert alt_2.validate_subgroup()
+    assert alt_2_matrix.validate_subgroup()
+    assert alt_3.validate_subgroup()
+    assert alt_3_matrix.validate_subgroup()
+    assert alt_4.validate_subgroup()
     assert alt_4_matrix.validate_subgroup()
 
 
