@@ -38,15 +38,15 @@ def klein_four_group(representation: str = "residue") -> Group:
     if representation == "permutation":
         return Group.from_generators(
             [
-                Permutation([1, 0, 2, 3]),
-                Permutation([0, 1, 3, 2]),
+                Permutation([1, 0, 3, 2]),
+                Permutation([3, 2, 1, 0]),
             ],
             Permutation(list(range(4))),
         )
     return Group.from_generators(
         [
-            Permutation([1, 0, 2, 3]).to_matrix(),
-            Permutation([0, 1, 3, 2]).to_matrix(),
+            Permutation([1, 0, 3, 2]).to_matrix(),
+            Permutation([3, 2, 1, 0]).to_matrix(),
         ],
         Permutation(list(range(4))).to_matrix(),
     )

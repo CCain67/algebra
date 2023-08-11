@@ -13,7 +13,7 @@ from ..constructions.subgroup_constructions import (
 )
 
 
-def sylow_p_subgroup(group: Group, p: int) -> Subgroup:
+def random_sylow_p_subgroup(group: Group, p: int) -> Subgroup:
     """Computes a random Sylow p-subgroup of the given group.
 
     Args:
@@ -30,9 +30,11 @@ def sylow_p_subgroup(group: Group, p: int) -> Subgroup:
     prime_factors = factors(group.order)
     prime_decomp = dict(list(zip(prime_factors[0], prime_factors[1])))
     if p not in prime_decomp:
-        raise ValueError("the order of the group must be divisible by the prime given")
-    required_subgroup_order = p ** prime_decomp[p]
+        raise ValueError(
+            f"The order of the group: ({group.order}) must be divisible by the prime given: ({p})."
+        )
 
+    required_subgroup_order = p ** prime_decomp[p]
     exp, exp_max = 1, prime_decomp[p]
 
     sylow_p_gens = [group.element_by_order(p)]
@@ -65,7 +67,13 @@ def number_of_sylow_p_subgroups(group: Group, p: int) -> int:
     Returns:
         int: the number of Sylow p-subgroups of the given group.
     """
-    return int(group.order / normalizer(sylow_p_subgroup(group, p), group).order)
+    prime_factors = factors(group.order)
+    prime_decomp = dict(list(zip(prime_factors[0], prime_factors[1])))
+    if p not in prime_decomp:
+        raise ValueError(
+            f"The order of the group: ({group.order}) must be divisible by the prime given: ({p})."
+        )
+    return int(group.order / normalizer(random_sylow_p_subgroup(group, p), group).order)
 
 
 def fetch_all_sylow_p_subgroups(group: Group, p: int) -> list:
@@ -85,11 +93,13 @@ def fetch_all_sylow_p_subgroups(group: Group, p: int) -> list:
     prime_factors = factors(group.order)
     prime_decomp = dict(list(zip(prime_factors[0], prime_factors[1])))
     if p not in prime_decomp:
-        raise ValueError("the order of the group must be divisible by the prime given")
+        raise ValueError(
+            f"The order of the group: ({group.order}) must be divisible by the prime given: ({p})."
+        )
 
-    sylow_p = sylow_p_subgroup(group, p)
+    sylow_p = random_sylow_p_subgroup(group, p)
     sylow_centralizer = centralizer(sylow_p, group)
-    sylow_p_subgroups = set()
+    sylow_p_subgroups = set({sylow_p})
     for g in (x for x in group if x not in sylow_centralizer):
         sylow_p_subgroups.update({conjugate_subgroup(sylow_p, g)})
 
