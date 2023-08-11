@@ -1,9 +1,26 @@
 """Unit tests for permutation groups"""
+import pytest
+
 from noetherpy.group_theory.groups import Subgroup
 from noetherpy.group_theory.common_groups.permutation_groups import (
     alternating_group,
     symmetric_group,
 )
+
+
+def test_no_non_positive_symmetric_group_orders() -> None:
+    with pytest.raises(ValueError):
+        symmetric_group(0)
+    with pytest.raises(ValueError):
+        symmetric_group(-1)
+
+
+def test_no_non_positive_alternating_group_orders() -> None:
+    with pytest.raises(ValueError):
+        alternating_group(0)
+    with pytest.raises(ValueError):
+        alternating_group(-1)
+
 
 sym_2 = symmetric_group(2)
 sym_3 = symmetric_group(3)

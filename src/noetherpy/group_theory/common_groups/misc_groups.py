@@ -28,7 +28,9 @@ def klein_four_group(representation: str = "residue") -> Group:
         Group: The Klein four group.
     """
     if representation not in ["residue", "permutation", "matrix"]:
-        raise ValueError('repr must be one of: "residue", "permutation" or "matrix"')
+        raise ValueError(
+            'representation must be one of: "residue", "permutation" or "matrix"'
+        )
 
     if representation == "residue":
         cyclic_order_2 = cyclic_group(2)
@@ -91,6 +93,8 @@ def dihedral_group(sides: int, representation: str = "dihedral") -> Group:
     Returns:
         Group: The dihedral group of order 2*sides.
     """
+    if sides < 1:
+        raise ValueError("the number of sides must be at least 1")
     if representation not in ["dihedral", "permutation", "matrix"]:
         raise ValueError('repr must be one of: "permutation" or "matrix"')
 
@@ -117,6 +121,8 @@ def dicyclic_group(n: int) -> Group:
     Returns:
         Group: the nth dicyclic group.
     """
+    if n < 1:
+        raise ValueError("the value of n must be at least 1")
     a = DicyclicGroupElement((1, 0), n)
     x = DicyclicGroupElement((0, 1), n)
     dic_n = Group(
@@ -135,6 +141,8 @@ def quasidihedral_group(n: int) -> Group:
     Returns:
         Group: the nth quasidihedral group.
     """
+    if n < 1:
+        raise ValueError("the value of n must be at least 1")
     r = QuasidihedralGroupElement((1, 0), n)
     s = QuasidihedralGroupElement((0, 1), n)
     qdih_n = Group(
@@ -157,6 +165,8 @@ def modular_maximal_cyclic_group(n: int) -> Group:
     Returns:
         Group: the nth modular maximal-cyclic group.
     """
+    if n < 1:
+        raise ValueError("the value of n must be at least 1")
     r = ModularMaximalCyclicGroupElement((1, 0), n)
     s = ModularMaximalCyclicGroupElement((0, 1), n)
     mmc_n = Group(

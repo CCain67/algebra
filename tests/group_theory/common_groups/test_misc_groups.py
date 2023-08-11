@@ -1,5 +1,6 @@
 """Unit tests for misc groups (e.g. polyhedral groups, Klein 4 group, etc.)"""
 
+import pytest
 import quaternionic
 
 from noetherpy.group_theory.group_elements import QuaternionElement
@@ -12,6 +13,35 @@ from noetherpy.group_theory.common_groups.misc_groups import (
     quasidihedral_group,
     quaternion_group,
 )
+
+
+def test_no_non_positive_dihedral_group_orders() -> None:
+    with pytest.raises(ValueError):
+        dihedral_group(0)
+    with pytest.raises(ValueError):
+        dihedral_group(-1)
+
+
+def test_no_non_positive_dicyclic_group_orders() -> None:
+    with pytest.raises(ValueError):
+        dicyclic_group(0)
+    with pytest.raises(ValueError):
+        dicyclic_group(-1)
+
+
+def test_no_non_positive_quasidihedral_group_orders() -> None:
+    with pytest.raises(ValueError):
+        quasidihedral_group(0)
+    with pytest.raises(ValueError):
+        quasidihedral_group(-1)
+
+
+def test_no_non_positive_modular_maximal_cyclic_group_orders() -> None:
+    with pytest.raises(ValueError):
+        modular_maximal_cyclic_group(0)
+    with pytest.raises(ValueError):
+        modular_maximal_cyclic_group(-1)
+
 
 klein_4 = klein_four_group()
 klein_4_permutation = klein_four_group(representation="permutation")

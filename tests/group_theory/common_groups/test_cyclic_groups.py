@@ -1,5 +1,7 @@
 """Unit tests for cyclic groups"""
 
+import pytest
+
 from noetherpy.group_theory.common_groups.cyclic_groups import (
     cyclic_group,
 )
@@ -15,6 +17,13 @@ cyclic_group_7_permutation = cyclic_group(N=7, representation="permutation")
 cyclic_group_1_matrix = cyclic_group(N=1, representation="matrix")
 cyclic_group_6_matrix = cyclic_group(N=6, representation="matrix")
 cyclic_group_7_matrix = cyclic_group(N=7, representation="matrix")
+
+
+def test_no_non_positive_cyclic_group_orders() -> None:
+    with pytest.raises(ValueError):
+        cyclic_group(0)
+    with pytest.raises(ValueError):
+        cyclic_group(-1)
 
 
 def test_cyclic_group_triviality():

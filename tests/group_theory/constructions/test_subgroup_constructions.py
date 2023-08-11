@@ -5,6 +5,9 @@ from noetherpy.group_theory.common_groups.permutation_groups import symmetric_gr
 
 from noetherpy.group_theory.constructions.subgroup_constructions import (
     centralizer,
+    conjugate_subgroup,
+    normal_closure,
+    normal_core,
     normalizer,
 )
 
