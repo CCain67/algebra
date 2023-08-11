@@ -679,7 +679,7 @@ class Matrix(GroupElement):
         return (self.matrix != other.matrix).any()
 
     def __hash__(self) -> int:
-        return hash((self.matrix.tostring(), self.characteristic, self.degree))
+        return hash((self.matrix.tobytes(), self.characteristic, self.degree))
 
     def __mul__(self, other):
         return Matrix(self.matrix @ other.matrix, self.characteristic, self.degree)

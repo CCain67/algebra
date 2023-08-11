@@ -51,7 +51,7 @@ def test_conjugation_is_valid_automorphism() -> None:
     assert conj_auto.is_iso
 
 
-def test_left_multiplication_is_not_valid_homomorphism_for_non_abelian_group() -> None:
+def test_left_multiplication_is_not_valid_homomorphism() -> None:
     def left_multiplication(x: GroupElement) -> GroupElement:
         return g * x
 
