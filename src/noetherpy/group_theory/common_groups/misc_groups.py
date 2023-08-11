@@ -7,6 +7,7 @@ from ..group_elements import (
     DicyclicGroupElement,
     DihedralGroupElement,
     ModularMaximalCyclicGroupElement,
+    Permutation,
     QuasidihedralGroupElement,
     QuaternionElement,
 )
@@ -32,7 +33,21 @@ def klein_four_group(representation: str = "residue") -> Group:
     if representation == "residue":
         cyclic_order_2 = cyclic_group(2)
         return cyclic_order_2 * cyclic_order_2
-    return dihedral_group(2, representation)
+    if representation == "permutation":
+        return Group.from_generators(
+            [
+                Permutation([1, 0, 2, 3]),
+                Permutation([0, 1, 3, 2]),
+            ],
+            Permutation(list(range(4))),
+        )
+    return Group.from_generators(
+        [
+            Permutation([1, 0, 2, 3]).to_matrix(),
+            Permutation([0, 1, 3, 2]).to_matrix(),
+        ],
+        Permutation(list(range(4))).to_matrix(),
+    )
 
 
 def quaternion_group(representation: str = "quaternion") -> Group:

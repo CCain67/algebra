@@ -24,4 +24,4 @@ jobs:
         pip install .[dev]
     - name: Test with pytest
       run: |
-        pytest tests -v --cov-report term --cov-fail-under=50 --cov=src/noetherpy  
+        pytest tests -v --cov-report term --cov-fail-under=60 --cov=src/noetherpy  

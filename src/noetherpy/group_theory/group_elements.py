@@ -233,7 +233,7 @@ class DihedralGroupElement(PolyhedralGroupElement):
             Permutation: permutation representation of the dihedral group element.
         """
         r = Permutation([(i + 1) % self.n for i in range(self.n)])
-        s = Permutation([1, 0] + list(range(2, self.n)))
+        s = Permutation([0] + list(range(self.n - 1, 0, -1)))
         return (r ** self.exponents[0]) * (s ** self.exponents[1])
 
     def to_matrix(self) -> Matrix:
