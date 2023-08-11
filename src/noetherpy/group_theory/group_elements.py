@@ -741,6 +741,7 @@ class CartesianProductElement(GroupElement):
     def __init__(self, elements: tuple[GroupElement]) -> None:
         self.elements = self._flatten_nested_tuple(elements)
         self.num_elements = len(self.elements)
+        self._order = None
 
     def _flatten_nested_tuple(self, nested_tuple: tuple) -> tuple[GroupElement]:
         """Reduces a nested tuple into a single tuple. Example:
@@ -791,6 +792,14 @@ class CartesianProductElement(GroupElement):
 
     def get_order(self):
         return math.lcm(*[x.order for x in self.elements])
+
+    @property
+    def order(self):
+        """Fetches the order property"""
+        if self._order is None:
+            self._order = self.get_order()
+            return self._order
+        return self._order
 
     def is_identity(self):
         return [x.is_identity() for x in self.elements] == [True] * self.num_elements
