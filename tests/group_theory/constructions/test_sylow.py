@@ -26,6 +26,27 @@ alt_4 = alternating_group(4)
 klein_4 = klein_four_group(representation="permutation")
 
 
+def test_random_sylow_p_subgroup_gives_value_error_for_p_not_dividing_order_of_group() -> (
+    None
+):
+    with pytest.raises(ValueError):
+        random_sylow_p_subgroup(sym_5, 7)
+
+
+def test_number_of_sylow_p_subgroups_gives_value_error_for_p_not_dividing_order_of_group() -> (
+    None
+):
+    with pytest.raises(ValueError):
+        number_of_sylow_p_subgroups(sym_5, 7)
+
+
+def test_fetch_all_sylow_p_subgroups_gives_value_error_for_p_not_dividing_order_of_group() -> (
+    None
+):
+    with pytest.raises(ValueError):
+        fetch_all_sylow_p_subgroups(sym_5, 7)
+
+
 def test_random_sylow_p_subgroup() -> None:
     # the alternating group A_4 has a unique Sylow 2-subgroup,
     # so the randomness here is not an issue
