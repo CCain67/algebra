@@ -1,4 +1,5 @@
 """Unit tests for permutation groups"""
+from noetherpy.group_theory.groups import Subgroup
 from noetherpy.group_theory.common_groups.permutation_groups import (
     alternating_group,
     symmetric_group,
@@ -12,13 +13,19 @@ sym_2_matrix = symmetric_group(N=2, representation="matrix")
 sym_3_matrix = symmetric_group(N=3, representation="matrix")
 sym_4_matrix = symmetric_group(N=4, representation="matrix")
 
-alt_2 = alternating_group(2)
-alt_3 = alternating_group(3)
-alt_4 = alternating_group(4)
+alt_2 = Subgroup(alternating_group(2).elements, sym_2)
+alt_3 = Subgroup(alternating_group(3).elements, sym_3)
+alt_4 = Subgroup(alternating_group(4).elements, sym_4)
 
-alt_2_matrix = alternating_group(N=2, representation="matrix")
-alt_3_matrix = alternating_group(N=3, representation="matrix")
-alt_4_matrix = alternating_group(N=4, representation="matrix")
+alt_2_matrix = Subgroup(
+    alternating_group(N=2, representation="matrix").elements, sym_2_matrix
+)
+alt_3_matrix = Subgroup(
+    alternating_group(N=3, representation="matrix").elements, sym_3_matrix
+)
+alt_4_matrix = Subgroup(
+    alternating_group(N=4, representation="matrix").elements, sym_4_matrix
+)
 
 
 def test_symmetric_group_order():
@@ -79,3 +86,45 @@ def test_alternating_group_trivial_center_cases():
     assert alt_2_matrix.center.is_trivial() is True
     assert alt_3_matrix.center.is_trivial() is False
     assert alt_4_matrix.center.is_trivial() is True
+
+
+def test_symmetric_group_conjugacy_classes() -> None:
+    assert len(sym_2.conjugacy_classes) == 2
+    assert len(sym_3.conjugacy_classes) == 3
+    assert len(sym_4.conjugacy_classes) == 5
+    assert len(sym_2_matrix.conjugacy_classes) == 2
+    assert len(sym_3_matrix.conjugacy_classes) == 3
+    assert len(sym_4_matrix.conjugacy_classes) == 5
+
+
+def test_alternating_group_conjugacy_classes() -> None:
+    assert len(alt_2.conjugacy_classes) == 1
+    assert len(alt_3.conjugacy_classes) == 3
+    assert len(alt_4.conjugacy_classes) == 4
+    assert len(alt_2_matrix.conjugacy_classes) == 1
+    assert len(alt_3_matrix.conjugacy_classes) == 3
+    assert len(alt_4_matrix.conjugacy_classes) == 4
+
+
+def test_alternating_group_is_subgroup_of_symmetric_group() -> None:
+    assert alt_2.validate_inclusion()
+    assert alt_2.validate_subgroup()
+    assert alt_2_matrix.validate_inclusion()
+    assert alt_2_matrix.validate_subgroup()
+    assert alt_3.validate_inclusion()
+    assert alt_3.validate_subgroup()
+    assert alt_3_matrix.validate_inclusion()
+    assert alt_3_matrix.validate_subgroup()
+    assert alt_4.validate_inclusion()
+    assert alt_4.validate_subgroup()
+    assert alt_4_matrix.validate_inclusion()
+    assert alt_4_matrix.validate_subgroup()
+
+
+def test_alternating_group_is_normal_subgroup_of_symmetric_group() -> None:
+    assert alt_2.is_normal
+    assert alt_2_matrix.is_normal
+    assert alt_3.is_normal
+    assert alt_3_matrix.is_normal
+    assert alt_4.is_normal
+    assert alt_4_matrix.is_normal
