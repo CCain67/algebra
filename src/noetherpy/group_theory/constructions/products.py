@@ -13,6 +13,7 @@ from ..groups import (
 )
 from ..group_elements import GroupElement
 
+
 class SemidirectProductElement(GroupElement):
     """
     Here, we are viewing the 'twisting' homomorphism twist:G -> Aut(H) as a map
@@ -85,7 +86,9 @@ class SemidirectProductElement(GroupElement):
 
 
 def semidirect_product(
-    fiber: Group, twist: Callable[[GroupElement, GroupElement], GroupElement], base: Group
+    fiber: Group,
+    twist: Callable[[GroupElement, GroupElement], GroupElement],
+    base: Group,
 ) -> Group:
     """Constructs the semidirect product of two groups given a group action.
 
@@ -94,7 +97,7 @@ def semidirect_product(
         - twist (Callable): the action of the base group on the fiber group
         - base (Group): the group which is performing the action.
 
-    Terminology: for a group G with action f:G x H -> H, we will refer to G as the "base" group 
+    Terminology: for a group G with action f:G x H -> H, we will refer to G as the "base" group
         and H as the "fiber" group, in an analogy to fiber bundles.
 
     Returns:
