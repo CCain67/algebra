@@ -17,7 +17,9 @@ from ..groups import (
 )
 
 
-def _linear_combinations(GF: Type[galois.FieldArray], vector_list: list) -> list:
+def _linear_combinations(
+    GF: Type[galois.FieldArray], vector_list: Type[galois.FieldArray]
+) -> list:
     """Constructs all linear combinations of the vectors given over the finite field.
 
     Args:
@@ -28,17 +30,16 @@ def _linear_combinations(GF: Type[galois.FieldArray], vector_list: list) -> list
         list: list of all possible linear combinations of the vectors provided
     """
     number_of_vectors = len(vector_list)
-    all_scalar_combinations = product(
-        *[[GF(i) for i in range(GF.order)]] * number_of_vectors
+    scalar_combinations = GF(
+        list(product(*[list(range(GF.order))] * number_of_vectors))
     )
-    summand_list = []
-    for combination in all_scalar_combinations:
-        summand_list += [[c * x for c, x in zip(combination, vector_list)]]
-    return [reduce(lambda x, y: x + y, summand) for summand in summand_list]
+    return list(scalar_combinations @ vector_list)
 
 
 def _remove_linear_combos(
-    GF: Type[galois.FieldArray], starting_vectors: list, vector_list: list
+    GF: Type[galois.FieldArray],
+    starting_vectors: Type[galois.FieldArray],
+    vector_list: Type[galois.FieldArray],
 ) -> list:
     """Filters out linear combinations of vectors from list of starting vectors
 
@@ -69,7 +70,7 @@ def _get_general_linear_matrices(
     )[
         1:
     ]  # the 0th tuple is always (0,0,...,0)
-    starting_vectors = [GF(a) for a in starting_vector_entries]
+    starting_vectors = GF(starting_vector_entries)
     general_linear_matrices = []
     for vector in starting_vectors:
         k = 0
@@ -78,7 +79,7 @@ def _get_general_linear_matrices(
             v_lists = [
                 l + [w]
                 for l in v_lists
-                for w in _remove_linear_combos(GF, starting_vectors, l)
+                for w in _remove_linear_combos(GF, starting_vectors, GF(l))
             ]
             k += 1
         general_linear_matrices += [

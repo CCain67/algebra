@@ -54,10 +54,12 @@ def get_Onq_order(n, q):
 
 def test_GLnq_order():
     assert GL(2, 3).order == get_GLnq_order(2, 3)
+    assert GL(2, 4).order == get_GLnq_order(2, 4)
 
 
 def test_SLnq_order():
     assert SL(2, 3).order == get_SLnq_order(2, 3)
+    assert SL(2, 4).order == get_SLnq_order(2, 4)
 
 
 def test_Onq_order():

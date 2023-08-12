@@ -19,7 +19,6 @@ from noetherpy.group_theory.common_groups.misc_groups import (
 
 
 dih_7 = dihedral_group(7)
-dih_8 = dihedral_group(8)
 
 sym_5 = symmetric_group(5)
 alt_4 = alternating_group(4)
