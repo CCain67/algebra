@@ -2,7 +2,6 @@
 
 from typing import Type
 from itertools import product
-from functools import reduce
 
 import numpy as np
 import galois
